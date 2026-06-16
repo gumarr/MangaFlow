@@ -17,22 +17,24 @@
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
-                Padding="12"
+                Padding="22"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
-            <TextBox x:Name="OcrTextBox"
-                     Text="{x:Bind ViewModel.RecognizedText, Mode=OneWay}"
-                     IsReadOnly="True"
-                     TextWrapping="Wrap"
-                     AcceptsReturn="True"
-                     BorderThickness="0"
-                     Background="Transparent"
-                     FontFamily="Segoe UI, Segoe UI Variable"
-                     FontSize="14"
-                     VerticalAlignment="Stretch"
-                     HorizontalAlignment="Stretch"
-                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalAlignment="Stretch"
+                          HorizontalAlignment="Stretch">
+                <TextBlock x:Name="OcrTextBlock"
+                           Text="{x:Bind ViewModel.RecognizedText, Mode=OneWay}"
+                           IsTextSelectionEnabled="True"
+                           TextWrapping="Wrap"
+                           FontFamily="Segoe UI, Segoe UI Variable"
+                           FontSize="16"
+                           LineHeight="24"
+                           LineStackingStrategy="BlockLineHeight"
+                           VerticalAlignment="Top"
+                           HorizontalAlignment="Stretch"/>
+            </ScrollViewer>
         </Border>
     </Grid>
 </Window>

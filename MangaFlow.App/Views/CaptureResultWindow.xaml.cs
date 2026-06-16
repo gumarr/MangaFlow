@@ -13,6 +13,9 @@ public sealed partial class CaptureResultWindow : Window
     [DllImport("user32.dll")]
     private static extern int GetSystemMetrics(int nIndex);
 
+    [DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(IntPtr hwnd);
+
     private const int SM_XVIRTUALSCREEN = 76;
     private const int SM_YVIRTUALSCREEN = 77;
     private const int SM_CXVIRTUALSCREEN = 78;
@@ -34,68 +37,113 @@ public sealed partial class CaptureResultWindow : Window
             presenter.IsMinimizable = false;
         }
 
-        // Calculate auto-sizing based on text content length
-        int charCount = viewModel.RecognizedText?.Length ?? 0;
-        int targetWidth = 350;
-        int targetHeight = 120;
+        // Get window handle and monitor DPI scale factor
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        uint dpi = 96;
+        try
+        {
+            dpi = GetDpiForWindow(hwnd);
+        }
+        catch
+        {
+            // Fallback to standard 96 DPI if API call fails
+        }
+        double scaleFactor = dpi / 96.0;
 
-        if (charCount < 50)
+        // Base unscaled target sizes (prioritizing width over height to reduce wrapping/scrolling)
+        int charCount = viewModel.RecognizedText?.Length ?? 0;
+        double unscaledWidth = 400;
+        double unscaledHeight = 120;
+
+        if (charCount < 100)
         {
-            targetWidth = 200;
-            targetHeight = 60;
+            // Short text: compact tooltip
+            unscaledWidth = 400;
+            unscaledHeight = 120;
         }
-        else if (charCount < 150)
+        else if (charCount < 400)
         {
-            targetWidth = 300;
-            targetHeight = 90;
+            // Medium text: wider tooltip to avoid wrapping, low height
+            unscaledWidth = 650;
+            unscaledHeight = 180;
         }
-        else if (charCount < 300)
+        else if (charCount < 800)
         {
-            targetWidth = 400;
-            targetHeight = 150;
-        }
-        else if (charCount < 600)
-        {
-            targetWidth = 550;
-            targetHeight = 250;
+            // Long text: expand width significantly, keeping height minimal
+            unscaledWidth = 900;
+            unscaledHeight = 280;
         }
         else
         {
-            targetWidth = 750;
-            targetHeight = 400;
+            // Very long text: expand to max preferred bounds, introducing scrollbar only for extremely large translations
+            unscaledWidth = 1100;
+            unscaledHeight = 350;
+
+            if (charCount > 1500)
+            {
+                unscaledHeight = 550;
+            }
         }
 
-        // Clamp to exact specifications
-        targetWidth = Math.Clamp(targetWidth, 200, 800);
-        targetHeight = Math.Clamp(targetHeight, 60, 600);
+        // Apply DPI scaling to sizes
+        int targetWidth = (int)(unscaledWidth * scaleFactor);
+        int targetHeight = (int)(unscaledHeight * scaleFactor);
+
+        // Clamping bounds (also DPI scaled)
+        int minWidthScaled = (int)(400 * scaleFactor);
+        int preferredWidthScaled = (int)(650 * scaleFactor);
+        int maxWidthScaled = (int)(1200 * scaleFactor);
+
+        int minHeightScaled = (int)(120 * scaleFactor);
+        int preferredHeightScaled = (int)(350 * scaleFactor);
+        int maxHeightScaled = (int)(900 * scaleFactor);
+
+        targetWidth = Math.Clamp(targetWidth, minWidthScaled, maxWidthScaled);
+        targetHeight = Math.Clamp(targetHeight, minHeightScaled, maxHeightScaled);
 
         this.AppWindow.Resize(new Windows.Graphics.SizeInt32(targetWidth, targetHeight));
 
-        // Position tooltip near the capture region
+        // Position tooltip near the capture region with multi-level fallback
         if (x.HasValue && y.HasValue && w.HasValue && h.HasValue)
         {
-            // Position: X = SelectionRect.Right + 10, Y = SelectionRect.Top
-            int posX = (int)(x.Value + w.Value + 10);
-            int posY = (int)y.Value;
-
-            // Get virtual screen bounds for clamping and fallback detection
+            // Get virtual screen bounds for positioning boundary checks
             int screenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
             int screenTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
             int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
             int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-            // Fallback: If tooltip would go off-screen on the right, reposition to the left side
+            // Default placement: Right of selection, aligned with Top
+            int posX = (int)(x.Value + w.Value + 10);
+            int posY = (int)y.Value;
+
+            // Fallback 1: If it exceeds the right edge, move to the Left side of selection
             if (posX + targetWidth > screenLeft + screenWidth)
             {
                 posX = (int)(x.Value - targetWidth - 10);
+
+                // Fallback 2: If it also exceeds the left edge, place it Above the selection
+                if (posX < screenLeft)
+                {
+                    posX = (int)x.Value;
+                    posY = (int)(y.Value - targetHeight - 10);
+
+                    // Fallback 3: If it also exceeds the top edge, place it Below the selection
+                    if (posY < screenTop)
+                    {
+                        posY = (int)(y.Value + h.Value + 10);
+                    }
+                }
             }
 
-            // Clamp X and Y coordinates to make sure it stays inside screen boundaries
+            // Final safety clamp to guarantee the tooltip is fully visible within the monitor area
             posX = Math.Clamp(posX, screenLeft + 10, screenLeft + screenWidth - targetWidth - 10);
             posY = Math.Clamp(posY, screenTop + 10, screenTop + screenHeight - targetHeight - 10);
 
             this.AppWindow.Move(new Windows.Graphics.PointInt32(posX, posY));
         }
+
+        // Add debug logging
+        App.LogToFile($"[Tooltip] Monitor DPI: {dpi} (Scale: {scaleFactor:F2}) | Text Length: {charCount} | Calculated Size: {targetWidth}x{targetHeight}");
 
         // Close tooltip when deactivated (click outside)
         this.Activated += (sender, args) =>
@@ -125,7 +173,7 @@ public sealed partial class CaptureResultWindow : Window
                         try
                         {
                             var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
-                            package.SetText(OcrTextBox.Text);
+                            package.SetText(OcrTextBlock.Text);
                             Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
                         }
                         catch { }
@@ -134,10 +182,10 @@ public sealed partial class CaptureResultWindow : Window
                 }
             }), true);
 
-            // Focus the TextBox on load so user can copy/type/press escape immediately
+            // Focus the root content on load so user can copy/type/press escape immediately
             root.Loaded += (s, e) =>
             {
-                OcrTextBox.Focus(FocusState.Programmatic);
+                root.Focus(FocusState.Programmatic);
             };
         }
     }

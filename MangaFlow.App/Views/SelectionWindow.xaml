@@ -16,7 +16,7 @@
           KeyDown="OnKeyDown">
         
         <Grid>
-            <Image x:Name="BackgroundScreenImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <Image x:Name="BackgroundScreenImage" Stretch="Fill" />
             <Grid Background="#40000000" />
         </Grid>
 

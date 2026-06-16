@@ -114,7 +114,12 @@ public sealed partial class SelectionWindow : Window
 
             if (width > 5 && height > 5)
             {
-                _tcs.TrySetResult((x, y, width, height));
+                double scale = 1.0;
+                if (this.Content?.XamlRoot != null)
+                {
+                    scale = this.Content.XamlRoot.RasterizationScale;
+                }
+                _tcs.TrySetResult((x * scale, y * scale, width * scale, height * scale));
             }
             else
             {

@@ -37,6 +37,31 @@ public sealed partial class SelectionWindow : Window
         return _tcs.Task;
     }
 
+    public async Task SetBackgroundAsync(byte[] imageBytes)
+    {
+        if (imageBytes == null || imageBytes.Length == 0) return;
+
+        try
+        {
+            var bitmapImage = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage();
+            using (var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+            {
+                using (var writer = new Windows.Storage.Streams.DataWriter(stream.GetOutputStreamAt(0)))
+                {
+                    writer.WriteBytes(imageBytes);
+                    await writer.StoreAsync();
+                }
+                stream.Seek(0);
+                await bitmapImage.SetSourceAsync(stream);
+            }
+            BackgroundScreenImage.Source = bitmapImage;
+        }
+        catch (Exception)
+        {
+            // Fallback
+        }
+    }
+
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
         var properties = e.GetCurrentPoint(RootGrid);

@@ -33,4 +33,33 @@ public class ScreenCaptureServiceTests
         var files = Directory.GetFiles(tempFolder, "capture_*.png");
         Assert.NotEmpty(files);
     }
+
+    [Fact]
+    public async Task CaptureFullScreenAsync_ShouldReturnByteArray()
+    {
+        // Arrange
+        var service = new ScreenCaptureService(NullLogger<ScreenCaptureService>.Instance);
+
+        // Act
+        var result = await service.CaptureFullScreenAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
+
+    [Fact]
+    public async Task CropImageAsync_ShouldReturnCroppedByteArray()
+    {
+        // Arrange
+        var service = new ScreenCaptureService(NullLogger<ScreenCaptureService>.Instance);
+        var fullScreen = await service.CaptureFullScreenAsync();
+
+        // Act
+        var result = await service.CropImageAsync(fullScreen, 10, 10, 100, 50);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+    }
 }

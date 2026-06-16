@@ -9,11 +9,17 @@
     mc:Ignorable="d"
     Title="Select Screen Region">
 
-    <views:CursorGrid x:Name="RootGrid" Background="#40000000"
+    <views:CursorGrid x:Name="RootGrid"
           PointerPressed="OnPointerPressed"
           PointerMoved="OnPointerMoved"
           PointerReleased="OnPointerReleased"
           KeyDown="OnKeyDown">
+        
+        <Grid>
+            <Image x:Name="BackgroundScreenImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <Grid Background="#40000000" />
+        </Grid>
+
         <Canvas x:Name="SelectionCanvas" Background="Transparent">
             <Rectangle x:Name="SelectionRect"
                        Stroke="#FFFF0000"

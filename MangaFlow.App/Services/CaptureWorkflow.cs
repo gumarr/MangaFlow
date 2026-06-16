@@ -29,8 +29,12 @@ public class CaptureWorkflow
         _logger.LogInformation("Global hotkey triggered. Starting screen capture workflow...");
         try
         {
-            // 1. Show region selection overlay
+            // 1. Capture the entire virtual screen first
+            var fullScreenBytes = await _screenCaptureService.CaptureFullScreenAsync();
+
+            // 2. Show region selection overlay and set the background screenshot
             var selectionWindow = new SelectionWindow();
+            await selectionWindow.SetBackgroundAsync(fullScreenBytes);
             selectionWindow.Activate();
 
             var region = await selectionWindow.GetSelectionAsync();
@@ -43,12 +47,11 @@ public class CaptureWorkflow
             var (x, y, w, h) = region.Value;
             _logger.LogInformation("Region selected at ({X}, {Y}) with size {Width}x{Height}", x, y, w, h);
 
-            // 2. Capture the region
+            // 3. Crop the selected region from our screenshot in memory
             var timestamp = DateTime.UtcNow;
-            var imageBytes = await _screenCaptureService.CaptureScreenRegionAsync(x, y, w, h);
+            var imageBytes = await _screenCaptureService.CropImageAsync(fullScreenBytes, (int)x, (int)y, (int)w, (int)h);
 
-            // 3. Display popup result window
-            // Create ViewModel manually or resolve it
+            // 4. Display popup result window
             var resultViewModel = new CaptureResultViewModel();
             await resultViewModel.SetCaptureDataAsync(imageBytes, w, h, timestamp);
 

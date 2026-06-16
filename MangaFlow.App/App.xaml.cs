@@ -4,11 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using MangaFlow.Application;
+using MangaFlow.Application.Interfaces;
 using MangaFlow.Persistence;
 using MangaFlow.OCR;
 using MangaFlow.AI;
 using MangaFlow.Infrastructure;
 using MangaFlow.App.ViewModels;
+using MangaFlow.App.Services;
 
 namespace MangaFlow.App;
 
@@ -62,7 +64,8 @@ public partial class App : Microsoft.UI.Xaml.Application
         services.AddAiServices();
         services.AddInfrastructureServices();
 
-        // 4. Add ViewModels
+        // 4. Add ViewModels and Services
+        services.AddSingleton<CaptureWorkflow>();
         services.AddTransient<MainViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<ProjectsViewModel>();
@@ -75,9 +78,39 @@ public partial class App : Microsoft.UI.Xaml.Application
     /// Invoked when the application is launched.
     /// </summary>
     /// <param name="args">Details about the launch request and process.</param>
-    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+    protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
         _window.Activate();
+
+        try
+        {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_window);
+            
+            var hotkeyService = ServiceProvider.GetRequiredService<IHotkeyService>() as HotkeyService;
+            if (hotkeyService != null)
+            {
+                hotkeyService.Initialize(hwnd);
+
+                var settingsService = ServiceProvider.GetRequiredService<ISettingsService>();
+                var settings = await settingsService.GetSettingsAsync();
+                var hotkeyCombo = settings?.GlobalHotkey ?? "Alt + Q";
+
+                var workflow = ServiceProvider.GetRequiredService<CaptureWorkflow>();
+
+                hotkeyService.RegisterHotkey(hotkeyCombo, () =>
+                {
+                    _window.DispatcherQueue.TryEnqueue(async () =>
+                    {
+                        await workflow.StartCaptureWorkflowAsync();
+                    });
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            var logger = ServiceProvider.GetService<ILogger<App>>();
+            logger?.LogError(ex, "Failed to initialize global hotkeys on launch");
+        }
     }
 }

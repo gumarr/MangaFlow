@@ -11,6 +11,8 @@ namespace MangaFlow.App.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly ISettingsService _settingsService;
+    private readonly IHotkeyService _hotkeyService;
+    private readonly Services.CaptureWorkflow _captureWorkflow;
     private readonly ILogger<SettingsViewModel> _logger;
 
     [ObservableProperty]
@@ -35,7 +37,7 @@ public partial class SettingsViewModel : ObservableObject
     private bool _useGpu = true;
 
     [ObservableProperty]
-    private string _globalHotkey = "Ctrl+Shift+T";
+    private string _globalHotkey = "Alt + Q";
 
     [ObservableProperty]
     private string _defaultSourceLanguage = "Japanese";
@@ -46,9 +48,15 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSaving;
 
-    public SettingsViewModel(ISettingsService settingsService, ILogger<SettingsViewModel> logger)
+    public SettingsViewModel(
+        ISettingsService settingsService,
+        IHotkeyService hotkeyService,
+        Services.CaptureWorkflow captureWorkflow,
+        ILogger<SettingsViewModel> logger)
     {
         _settingsService = settingsService;
+        _hotkeyService = hotkeyService;
+        _captureWorkflow = captureWorkflow;
         _logger = logger;
     }
 
@@ -99,7 +107,23 @@ public partial class SettingsViewModel : ObservableObject
             Settings.DefaultTargetLanguage = DefaultTargetLanguage;
 
             await _settingsService.UpdateSettingsAsync(Settings);
-            _logger.LogInformation("Settings saved successfully.");
+            _logger.LogInformation("Settings saved successfully. Re-registering hotkey...");
+
+            _hotkeyService.RegisterHotkey(Settings.GlobalHotkey, () =>
+            {
+                var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+                if (dispatcher != null)
+                {
+                    dispatcher.TryEnqueue(async () =>
+                    {
+                        await _captureWorkflow.StartCaptureWorkflowAsync();
+                    });
+                }
+                else
+                {
+                    Task.Run(async () => await _captureWorkflow.StartCaptureWorkflowAsync());
+                }
+            });
         }
         catch (Exception ex)
         {

@@ -11,7 +11,7 @@ public class AppSettings
     public int CpuThreads { get; set; } = 4;
     public double Temperature { get; set; } = 0.3;
     public bool UseGpu { get; set; } = true;
-    public string GlobalHotkey { get; set; } = "Ctrl+Shift+T";
+    public string GlobalHotkey { get; set; } = "Alt + Q";
     public string DefaultSourceLanguage { get; set; } = "Japanese";
     public string DefaultTargetLanguage { get; set; } = "English";
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

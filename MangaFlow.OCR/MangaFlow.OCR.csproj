@@ -5,6 +5,10 @@
     <ProjectReference Include="..\MangaFlow.Domain\MangaFlow.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="RapidOCR.Net" Version="0.0.2" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

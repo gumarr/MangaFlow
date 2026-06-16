@@ -97,6 +97,7 @@ public partial class App : Microsoft.UI.Xaml.Application
         services.AddTransient<GlossaryViewModel>();
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<OcrPlaygroundViewModel>();
     }
 
     public void HideMainWindow()

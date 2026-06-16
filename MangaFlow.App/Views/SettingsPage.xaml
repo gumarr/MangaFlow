@@ -27,15 +27,33 @@
                 <StackPanel Spacing="16">
                     <TextBlock Text="OCR Settings" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
                     
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="24">
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Text="OCR Engine" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox SelectedItem="{x:Bind ViewModel.OcrEngine, Mode=TwoWay}" Width="240">
+                                <x:String>RapidOCR</x:String>
+                                <x:String>Stub</x:String>
+                            </ComboBox>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="1" Spacing="8">
+                            <TextBlock Text="Default OCR Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ComboBox SelectedItem="{x:Bind ViewModel.OcrLanguage, Mode=TwoWay}" Width="240">
+                                <x:String>Japanese</x:String>
+                                <x:String>English</x:String>
+                                <x:String>Chinese</x:String>
+                                <x:String>Korean</x:String>
+                                <x:String>Vietnamese</x:String>
+                            </ComboBox>
+                        </StackPanel>
+                    </Grid>
+
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Default OCR Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <ComboBox SelectedItem="{x:Bind ViewModel.OcrLanguage, Mode=TwoWay}" Width="240">
-                            <x:String>Japanese</x:String>
-                            <x:String>English</x:String>
-                            <x:String>Chinese</x:String>
-                            <x:String>Korean</x:String>
-                            <x:String>Vietnamese</x:String>
-                        </ComboBox>
+                        <TextBlock Text="OCR Model Path (ONNX/keys directory)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                            <TextBox Grid.Column="0" Text="{x:Bind ViewModel.OcrModelPath, Mode=TwoWay}" PlaceholderText="C:\models\ocr" />
+                            <Button Grid.Column="1" Content="Browse..." Style="{ThemeResource DefaultButtonStyle}" Click="OnBrowseOcrModelPathClick" />
+                        </Grid>
                     </StackPanel>
                 </StackPanel>
             </Border>

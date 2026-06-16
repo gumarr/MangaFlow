@@ -7,7 +7,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddOcrServices(this IServiceCollection services)
     {
-        services.AddSingleton<IOcrService, OcrServiceStub>();
+        services.AddSingleton<IOcrService, RapidOcrService>();
         return services;
     }
 }

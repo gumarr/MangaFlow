@@ -49,6 +49,10 @@ public sealed partial class MainPage : Page
                     ContentFrame.Navigate(typeof(HistoryPage));
                     sender.Header = "MangaFlow - History";
                     break;
+                case "OcrPlayground":
+                    ContentFrame.Navigate(typeof(OcrPlaygroundPage));
+                    sender.Header = "MangaFlow - OCR Playground";
+                    break;
             }
         }
     }

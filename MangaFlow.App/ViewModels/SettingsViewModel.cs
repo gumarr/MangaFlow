@@ -22,6 +22,12 @@ public partial class SettingsViewModel : ObservableObject
     private string _ocrLanguage = "Japanese";
 
     [ObservableProperty]
+    private string _ocrEngine = "RapidOCR";
+
+    [ObservableProperty]
+    private string _ocrModelPath = string.Empty;
+
+    [ObservableProperty]
     private string _selectedLlmModel = "Qwen 3 8B GGUF";
 
     [ObservableProperty]
@@ -74,6 +80,8 @@ public partial class SettingsViewModel : ObservableObject
 
             // Load properties into view fields
             OcrLanguage = appSettings.OcrLanguage;
+            OcrEngine = appSettings.OcrEngine;
+            OcrModelPath = appSettings.OcrModelPath;
             SelectedLlmModel = appSettings.SelectedLlmModel;
             LlmModelPath = appSettings.LlmModelPath;
             CpuThreads = appSettings.CpuThreads;
@@ -101,6 +109,8 @@ public partial class SettingsViewModel : ObservableObject
         {
             // Sync fields back to entity
             Settings.OcrLanguage = OcrLanguage;
+            Settings.OcrEngine = OcrEngine;
+            Settings.OcrModelPath = OcrModelPath;
             Settings.SelectedLlmModel = SelectedLlmModel;
             Settings.LlmModelPath = LlmModelPath;
             Settings.CpuThreads = CpuThreads;

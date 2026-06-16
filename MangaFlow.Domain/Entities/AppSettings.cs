@@ -6,6 +6,8 @@ public class AppSettings
 {
     public Guid Id { get; set; }
     public string OcrLanguage { get; set; } = "Japanese";
+    public string OcrEngine { get; set; } = "RapidOCR";
+    public string OcrModelPath { get; set; } = string.Empty;
     public string SelectedLlmModel { get; set; } = "Qwen 3 8B GGUF";
     public string LlmModelPath { get; set; } = string.Empty;
     public int CpuThreads { get; set; } = 4;

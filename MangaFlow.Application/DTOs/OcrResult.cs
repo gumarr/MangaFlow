@@ -6,21 +6,38 @@ namespace MangaFlow.Application.DTOs;
 public class OcrResult
 {
     public List<OcrBlock> Blocks { get; set; } = new();
+    public List<OcrLine> Lines { get; set; } = new();
 
     public string FullText
     {
         get
         {
-            var sb = new StringBuilder();
-            foreach (var block in Blocks)
+            if (Lines.Count > 0)
             {
-                if (sb.Length > 0)
+                var sb = new StringBuilder();
+                foreach (var line in Lines)
                 {
-                    sb.Append('\n');
+                    if (sb.Length > 0)
+                    {
+                        sb.Append('\n');
+                    }
+                    sb.Append(line.Text);
                 }
-                sb.Append(block.Text);
+                return sb.ToString();
             }
-            return sb.ToString();
+            else
+            {
+                var sb = new StringBuilder();
+                foreach (var block in Blocks)
+                {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append('\n');
+                    }
+                    sb.Append(block.Text);
+                }
+                return sb.ToString();
+            }
         }
     }
 }

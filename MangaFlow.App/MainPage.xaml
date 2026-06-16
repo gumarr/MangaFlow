@@ -20,6 +20,7 @@
                 <NavigationViewItem Content="Projects" Icon="Folder" Tag="Projects" x:Name="ProjectsItem" />
                 <NavigationViewItem Content="Glossary" Icon="Character" Tag="Glossary" x:Name="GlossaryItem" />
                 <NavigationViewItem Content="History" Icon="Clock" Tag="History" x:Name="HistoryItem" />
+                <NavigationViewItem Content="OCR Playground" Icon="Target" Tag="OcrPlayground" x:Name="OcrPlaygroundItem" />
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame" />

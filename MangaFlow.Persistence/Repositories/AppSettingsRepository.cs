@@ -24,6 +24,8 @@ public class AppSettingsRepository : IAppSettingsRepository
             {
                 Id = Guid.NewGuid(),
                 OcrLanguage = "Japanese",
+                OcrEngine = "RapidOCR",
+                OcrModelPath = string.Empty,
                 SelectedLlmModel = "Qwen 3 8B GGUF",
                 LlmModelPath = string.Empty,
                 CpuThreads = 4,

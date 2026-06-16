@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="MangaFlow.AI/MangaFlow.AI.csproj" />
+  <Project Path="MangaFlow.App/MangaFlow.App.csproj" />
+  <Project Path="MangaFlow.Application/MangaFlow.Application.csproj" />
+  <Project Path="MangaFlow.Domain/MangaFlow.Domain.csproj" />
+  <Project Path="MangaFlow.Infrastructure/MangaFlow.Infrastructure.csproj" />
+  <Project Path="MangaFlow.OCR/MangaFlow.OCR.csproj" />
+  <Project Path="MangaFlow.Persistence/MangaFlow.Persistence.csproj" />
+  <Project Path="MangaFlow.Tests/MangaFlow.Tests.csproj" />
+</Solution>

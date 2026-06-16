@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="MangaFlow.App.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:MangaFlow.App.ViewModels"
+    xmlns:helpers="using:MangaFlow.App.Helpers"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
+
+    <ScrollViewer Padding="32,24,32,24">
+        <StackPanel Spacing="24" MaxWidth="1000" HorizontalAlignment="Left">
+            <!-- Header section -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="MangaFlow" Style="{ThemeResource HeaderTextBlockStyle}" FontWeight="Bold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                <TextBlock Text="Instant local translation using OCR and AI" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+
+            <!-- Translation control card -->
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="24">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Active Translation Control" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
+                    
+                    <Grid RowDefinitions="Auto" ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                            <TextBlock Text="Active Project:" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            <ComboBox ItemsSource="{x:Bind ViewModel.Projects, Mode=OneWay}"
+                                      SelectedItem="{x:Bind ViewModel.SelectedProject, Mode=TwoWay}"
+                                      DisplayMemberPath="Name"
+                                      PlaceholderText="Select a Project"
+                                      Width="240" />
+                        </StackPanel>
+                        
+                        <Button Grid.Column="1" 
+                                Content="Capture &amp; Translate" 
+                                Command="{x:Bind ViewModel.TranslateRegionCommand}" 
+                                Style="{ThemeResource AccentButtonStyle}" 
+                                Padding="16,8,16,8"
+                                CornerRadius="4">
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="T" Modifiers="Control,Shift" />
+                            </Button.KeyboardAccelerators>
+                        </Button>
+                    </Grid>
+                    
+                    <TextBlock Text="Press Ctrl+Shift+T from anywhere to trigger screen capture" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Results Grid -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="24">
+                <!-- OCR source box -->
+                <Border Grid.Column="0" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Recognized OCR Text (Source)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBox Text="{x:Bind ViewModel.RecognizedText, Mode=OneWay}"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 Height="250"
+                                 Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                 BorderThickness="1"
+                                 CornerRadius="4"
+                                 PlaceholderText="No text recognized yet." />
+                    </StackPanel>
+                </Border>
+
+                <!-- Translation result box -->
+                <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="AI Translation (Target)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBox Text="{x:Bind ViewModel.TranslatedText, Mode=OneWay}"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 Height="250"
+                                 Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                 BorderThickness="1"
+                                 CornerRadius="4"
+                                 PlaceholderText="Translation will appear here." />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Translating Indicator -->
+            <StackPanel Orientation="Horizontal" Spacing="12" Visibility="{x:Bind ViewModel.IsTranslating, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center">
+                <ProgressRing IsActive="True" Width="20" Height="20" />
+                <TextBlock Text="Processing pipeline..." Style="{ThemeResource BodyTextBlockStyle}" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

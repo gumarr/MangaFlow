@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="MangaFlow.App.Views.ProjectsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:MangaFlow.App.ViewModels"
+    xmlns:entities="using:MangaFlow.Domain.Entities"
+    xmlns:helpers="using:MangaFlow.App.Helpers"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>
+
+    <Grid Padding="32,24,32,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,24">
+            <TextBlock Text="Translation Projects" Style="{ThemeResource HeaderTextBlockStyle}" FontWeight="Bold" />
+            <TextBlock Text="Manage and configure your active manga series translations" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+
+        <!-- Content Area -->
+        <Grid Grid.Row="1" ColumnDefinitions="320, *, 400" ColumnSpacing="24">
+            <!-- Left Panel: Project List -->
+            <StackPanel Grid.Column="0" Spacing="16">
+                <TextBlock Text="Series List" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
+                
+                <ListView ItemsSource="{x:Bind ViewModel.Projects, Mode=OneWay}"
+                          SelectedItem="{x:Bind ViewModel.SelectedProject, Mode=TwoWay}"
+                          Height="350"
+                          Background="{ThemeResource ControlOnImageFillColorDefaultBrush}"
+                          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                          BorderThickness="1"
+                          CornerRadius="8">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="entities:Project">
+                            <Grid Margin="0,4,0,4">
+                                <StackPanel Spacing="2">
+                                    <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock Text="{x:Bind SourceLanguage}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+
+            <!-- Center Panel: Project Detail -->
+            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="24" Margin="0,0,0,16">
+                <Grid RowDefinitions="Auto, Auto, *">
+                    <TextBlock Grid.Row="0" Text="Project Details" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" Margin="0,0,0,16" />
+                    
+                    <StackPanel Grid.Row="1" Spacing="12" Visibility="{x:Bind ViewModel.IsProjectSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Name:" FontWeight="SemiBold" Width="120" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedProject.Name, Mode=OneWay}" />
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Description:" FontWeight="SemiBold" Width="120" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedProject.Description, Mode=OneWay}" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Languages:" FontWeight="SemiBold" Width="120" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedProject.SourceLanguage, Mode=OneWay}" />
+                            <TextBlock Text=" &gt; " />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedProject.TargetLanguage, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Folder Path:" FontWeight="SemiBold" Width="120" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedProject.FolderPath, Mode=OneWay}" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Created:" FontWeight="SemiBold" Width="120" />
+                            <TextBlock Text="{x:Bind ViewModel.SelectedProject.CreatedAt, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <Button Content="Delete Project" 
+                                Command="{x:Bind ViewModel.DeleteProjectCommand}"
+                                CommandParameter="{x:Bind ViewModel.SelectedProject, Mode=OneWay}"
+                                Style="{ThemeResource DefaultButtonStyle}"
+                                Foreground="Red"
+                                Margin="0,20,0,0" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Text="Select a series from the left to view details" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" 
+                               Visibility="{x:Bind ViewModel.IsProjectNotSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </Grid>
+            </Border>
+
+            <!-- Right Panel: Create Project Form -->
+            <Border Grid.Column="2" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="24" Margin="0,0,0,16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Create New Series" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
+                    
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Project Name" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBox Text="{x:Bind ViewModel.NewProjectName, Mode=TwoWay}" PlaceholderText="e.g. One Piece, Overlord" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Description" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBox Text="{x:Bind ViewModel.NewProjectDescription, Mode=TwoWay}" PlaceholderText="Optional summary of this series" AcceptsReturn="True" Height="60" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Text="Source Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox Text="{x:Bind ViewModel.NewProjectSourceLanguage, Mode=TwoWay}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="8">
+                            <TextBlock Text="Target Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox Text="{x:Bind ViewModel.NewProjectTargetLanguage, Mode=TwoWay}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Workspace Folder" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBox Text="{x:Bind ViewModel.NewProjectFolderPath, Mode=TwoWay}" PlaceholderText="Path to images/chapters" />
+                    </StackPanel>
+
+                    <Button Content="Create Project"
+                            Command="{x:Bind ViewModel.CreateProjectCommand}"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            HorizontalAlignment="Stretch"
+                            Margin="0,12,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>

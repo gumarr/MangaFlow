@@ -1,0 +1,61 @@
+## Ignore Visual Studio temp files, build results, and database files
+## Source: https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPS/
+[Release]/
+[Releases]/
+x64/
+x86/
+SDK/
+ARM/
+ARM64/
+bld/
+[Bb]in/
+[Ob]j/
+[Log]/
+[Logs]/
+
+# Visual Studio 2015/2017/2019/2022 cache directory
+.vs/
+# Generated files
+Generated\ Files/
+
+# MSTest test Results
+[Test]Result*/
+[Build]Parent/
+
+# Modern IT Folder
+.kudu/
+
+# Backup and recovery files from veeam
+*.vlb
+
+# SQLite Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Windows App SDK / WinUI 3 generated
+AppPackages/
+BundleArtifacts/

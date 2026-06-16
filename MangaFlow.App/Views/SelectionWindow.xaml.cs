@@ -16,6 +16,10 @@ public sealed partial class SelectionWindow : Window
     private bool _isDragging;
     private readonly TaskCompletionSource<(double X, double Y, double Width, double Height)?> _tcs = new();
 
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
     public SelectionWindow()
     {
         this.InitializeComponent();
@@ -23,11 +27,14 @@ public sealed partial class SelectionWindow : Window
         // Configure full screen overlay
         var appWindow = this.AppWindow;
         appWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
+        appWindow.IsShownInSwitchers = false;
 
         // Configure cursor to crosshair via CursorGrid implementation
 
         this.Activated += (s, e) =>
         {
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            SetForegroundWindow(hwnd);
             RootGrid.Focus(FocusState.Programmatic);
         };
     }

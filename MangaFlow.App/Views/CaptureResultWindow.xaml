@@ -31,8 +31,8 @@
 
         <!-- Image Preview Frame -->
         <Border Grid.Row="1" 
-                Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
-                BorderBrush="{ThemeResource SystemControlElevationBorderBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
                 CornerRadius="8"
                 Padding="12"

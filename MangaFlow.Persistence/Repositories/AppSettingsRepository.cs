@@ -29,9 +29,10 @@ public class AppSettingsRepository : IAppSettingsRepository
                 CpuThreads = 4,
                 Temperature = 0.3,
                 UseGpu = true,
-                GlobalHotkey = "Ctrl+Shift+T",
+                GlobalHotkey = "Alt+Q",
                 DefaultSourceLanguage = "Japanese",
                 DefaultTargetLanguage = "English",
+                ShowCapturePreview = false,
                 UpdatedAt = DateTime.UtcNow
             };
             await _context.Settings.AddAsync(settings);

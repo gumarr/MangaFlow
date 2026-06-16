@@ -99,6 +99,8 @@
                             <TextBox Text="{x:Bind ViewModel.DefaultTargetLanguage, Mode=TwoWay}" Width="240" />
                         </StackPanel>
                     </Grid>
+
+                    <ToggleSwitch Header="Show Capture Image Preview (Developer mode)" IsOn="{x:Bind ViewModel.ShowCapturePreview, Mode=TwoWay}" />
                 </StackPanel>
             </Border>
 

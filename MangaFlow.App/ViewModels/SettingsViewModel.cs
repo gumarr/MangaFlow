@@ -46,6 +46,9 @@ public partial class SettingsViewModel : ObservableObject
     private string _defaultTargetLanguage = "English";
 
     [ObservableProperty]
+    private bool _showCapturePreview = false;
+
+    [ObservableProperty]
     private bool _isSaving;
 
     public SettingsViewModel(
@@ -79,6 +82,7 @@ public partial class SettingsViewModel : ObservableObject
             GlobalHotkey = appSettings.GlobalHotkey;
             DefaultSourceLanguage = appSettings.DefaultSourceLanguage;
             DefaultTargetLanguage = appSettings.DefaultTargetLanguage;
+            ShowCapturePreview = appSettings.ShowCapturePreview;
         }
         catch (Exception ex)
         {
@@ -105,6 +109,7 @@ public partial class SettingsViewModel : ObservableObject
             Settings.GlobalHotkey = GlobalHotkey;
             Settings.DefaultSourceLanguage = DefaultSourceLanguage;
             Settings.DefaultTargetLanguage = DefaultTargetLanguage;
+            Settings.ShowCapturePreview = ShowCapturePreview;
 
             await _settingsService.UpdateSettingsAsync(Settings);
             _logger.LogInformation("Settings saved successfully. Re-registering hotkey...");

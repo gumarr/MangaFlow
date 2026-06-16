@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
@@ -7,6 +8,8 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Windows.Foundation;
 using Windows.System;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MangaFlow.App.Views;
 
@@ -15,28 +18,138 @@ public sealed partial class SelectionWindow : Window
     private Point _startPoint;
     private bool _isDragging;
     private readonly TaskCompletionSource<(double X, double Y, double Width, double Height)?> _tcs = new();
+    private readonly ILogger<SelectionWindow> _logger;
 
-    [System.Runtime.InteropServices.DllImport("user32.dll")]
-    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    // Win32 API Imports for activation & topmost behavior
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetCurrentThreadId();
+
+    [DllImport("user32.dll")]
+    private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll")]
+    private static extern bool BringWindowToTop(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr", CharSet = CharSet.Auto)]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll", EntryPoint = "GetWindowLong", CharSet = CharSet.Auto)]
+    private static extern int GetWindowLong32(IntPtr hWnd, int nIndex);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    private static IntPtr GetWindowLong(IntPtr hWnd, int nIndex)
+    {
+        if (IntPtr.Size == 8)
+            return GetWindowLongPtr(hWnd, nIndex);
+        else
+            return new IntPtr(GetWindowLong32(hWnd, nIndex));
+    }
+
+    private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_SHOWWINDOW = 0x0040;
+    private const int GWL_EXSTYLE = -20;
+    private const int WS_EX_TOPMOST = 0x0008;
+
+    // GetSystemMetrics indexes
+    private const int SM_XVIRTUALSCREEN = 76;
+    private const int SM_YVIRTUALSCREEN = 77;
+    private const int SM_CXVIRTUALSCREEN = 78;
+    private const int SM_CYVIRTUALSCREEN = 79;
 
     public SelectionWindow()
     {
         this.InitializeComponent();
 
-        // Configure full screen overlay
+        _logger = App.CurrentApp.ServiceProvider.GetRequiredService<ILogger<SelectionWindow>>();
+
+        // Configure borderless window
         var appWindow = this.AppWindow;
-        appWindow.SetPresenter(AppWindowPresenterKind.FullScreen);
         appWindow.IsShownInSwitchers = false;
 
-        // Configure cursor to crosshair via CursorGrid implementation
+        var presenter = appWindow.Presenter as OverlappedPresenter;
+        if (presenter != null)
+        {
+            presenter.SetBorderAndTitleBar(false, false);
+            presenter.IsAlwaysOnTop = true;
+            presenter.IsResizable = false;
+            presenter.IsMaximizable = false;
+            presenter.IsMinimizable = false;
+        }
+
+        // Size to virtual screen
+        int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        appWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, width, height));
 
         this.Activated += (s, e) =>
         {
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-            SetForegroundWindow(hwnd);
+            _logger.LogInformation("Overlay activated. HWND: {Hwnd}", hwnd);
             RootGrid.Focus(FocusState.Programmatic);
         };
+    }
+
+    public void ForceForegroundAndTopmost()
+    {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        _logger.LogInformation("ForceForegroundAndTopmost called on SelectionWindow. HWND: {Hwnd}", hwnd);
+
+        try
+        {
+            // Force topmost layout via Win32 SetWindowPos
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
+
+            // Force foreground activation using the thread input attachment pattern
+            IntPtr foregroundHwnd = GetForegroundWindow();
+            uint foregroundThreadId = GetWindowThreadProcessId(foregroundHwnd, out _);
+            uint currentThreadId = GetCurrentThreadId();
+
+            if (foregroundThreadId != currentThreadId && foregroundThreadId != 0)
+            {
+                AttachThreadInput(currentThreadId, foregroundThreadId, true);
+                BringWindowToTop(hwnd);
+                SetForegroundWindow(hwnd);
+                AttachThreadInput(currentThreadId, foregroundThreadId, false);
+            }
+            else
+            {
+                BringWindowToTop(hwnd);
+                SetForegroundWindow(hwnd);
+            }
+
+            // Verify and log status
+            IntPtr activeHwnd = GetForegroundWindow();
+            bool isForeground = (activeHwnd == hwnd);
+
+            IntPtr exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+            bool isTopmost = (exStyle.ToInt64() & WS_EX_TOPMOST) != 0;
+
+            _logger.LogInformation("Overlay foreground status: {IsForeground}", isForeground);
+            _logger.LogInformation("Overlay topmost status: {IsTopmost}", isTopmost);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to apply topmost/foreground activation to Overlay");
+        }
     }
 
     public Task<(double X, double Y, double Width, double Height)?> GetSelectionAsync()

@@ -18,10 +18,36 @@ public partial class CaptureResultViewModel : ObservableObject
     [ObservableProperty]
     private string _timestamp = string.Empty;
 
-    public async Task SetCaptureDataAsync(byte[] imageBytes, double width, double height, DateTime timestamp)
+    [ObservableProperty]
+    private string _recognizedText = string.Empty;
+
+    [ObservableProperty]
+    private string _copyStatus = string.Empty;
+
+    public async Task SetCaptureDataAsync(byte[] imageBytes, double width, double height, DateTime timestamp, string recognizedText)
     {
         Dimensions = $"{(int)width} x {(int)height} px";
         Timestamp = timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+        RecognizedText = recognizedText;
+
+        if (!string.IsNullOrWhiteSpace(recognizedText))
+        {
+            try
+            {
+                var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+                package.SetText(recognizedText);
+                Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+                CopyStatus = "Auto-copied to clipboard!";
+            }
+            catch (Exception)
+            {
+                CopyStatus = "Failed to auto-copy to clipboard.";
+            }
+        }
+        else
+        {
+            CopyStatus = "[No text recognized]";
+        }
 
         if (imageBytes == null || imageBytes.Length == 0)
         {

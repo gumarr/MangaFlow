@@ -14,5 +14,6 @@ public class AppSettings
     public string GlobalHotkey { get; set; } = "Alt + Q";
     public string DefaultSourceLanguage { get; set; } = "Japanese";
     public string DefaultTargetLanguage { get; set; } = "English";
+    public bool ShowCapturePreview { get; set; } = false;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

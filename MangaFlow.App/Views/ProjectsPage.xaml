@@ -117,11 +117,13 @@
                     <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
                         <StackPanel Grid.Column="0" Spacing="8">
                             <TextBlock Text="Source Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBox Text="{x:Bind ViewModel.NewProjectSourceLanguage, Mode=TwoWay}" />
+                            <TextBox Text="English" IsReadOnly="True" IsEnabled="False" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Spacing="8">
                             <TextBlock Text="Target Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBox Text="{x:Bind ViewModel.NewProjectTargetLanguage, Mode=TwoWay}" />
+                            <ComboBox SelectedItem="{x:Bind ViewModel.NewProjectTargetLanguage, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                <x:String>Vietnamese</x:String>
+                            </ComboBox>
                         </StackPanel>
                     </Grid>
 

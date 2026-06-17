@@ -34,13 +34,20 @@
                 <!-- Project Filter Card -->
                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                     <StackPanel Spacing="12">
-                        <TextBlock Text="Glossary Scope" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <!-- Project selector (null display custom placeholder) -->
-                        <ComboBox ItemsSource="{x:Bind ViewModel.Projects, Mode=OneWay}"
-                                  SelectedItem="{x:Bind ViewModel.SelectedProject, Mode=TwoWay}"
-                                  SelectionChanged="OnScopeSelectionChanged"
+                        <TextBlock Text="Glossary Scope" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Text="Select a project to view its glossary, or &quot;Global&quot; for shared terms" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                        <ComboBox SelectionChanged="OnScopeSelectionChanged"
                                   HorizontalAlignment="Stretch"
+                                  PlaceholderText="Select scope..."
                                   x:Name="ScopeComboBox" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8F1;" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="ScopeDescriptionText"
+                                       Text="Showing: Global Glossary (Shared)"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

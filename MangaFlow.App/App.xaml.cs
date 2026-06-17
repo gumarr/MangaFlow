@@ -98,6 +98,7 @@ public partial class App : Microsoft.UI.Xaml.Application
         services.AddTransient<HistoryViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<OcrPlaygroundViewModel>();
+        services.AddTransient<TranslationPlaygroundViewModel>();
     }
 
     public void HideMainWindow()
@@ -173,6 +174,30 @@ public partial class App : Microsoft.UI.Xaml.Application
             _ = Task.Run(async () =>
             {
                 await ocrService.InitializeAsync();
+            });
+
+            // Pre-load LLM model in background if path is configured
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var settingsSvc = ServiceProvider.GetRequiredService<ISettingsService>();
+                    var settings = await settingsSvc.GetSettingsAsync();
+                    if (!string.IsNullOrWhiteSpace(settings?.LlmModelPath) && System.IO.File.Exists(settings.LlmModelPath))
+                    {
+                        var provider = ServiceProvider.GetRequiredService<LlamaCppTranslationProvider>();
+                        await provider.EnsureModelLoadedAsync(
+                            settings.LlmModelPath,
+                            settings.CpuThreads,
+                            settings.UseGpu,
+                            (float)settings.Temperature);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var logger = ServiceProvider.GetService<ILogger<App>>();
+                    logger?.LogError(ex, "Failed to pre-load LLM model on startup");
+                }
             });
 
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_window);

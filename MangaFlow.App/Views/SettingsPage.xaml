@@ -19,7 +19,7 @@
             <!-- Header -->
             <StackPanel Spacing="4">
                 <TextBlock Text="Settings" Style="{ThemeResource HeaderTextBlockStyle}" FontWeight="Bold" />
-                <TextBlock Text="Configure translation models, OCR engine, and performance preferences" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="Configure OCR engine, hotkeys, and language preferences" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
             <!-- OCR Settings Card -->
@@ -54,41 +54,37 @@
                 </StackPanel>
             </Border>
 
-            <!-- LLM Engine Settings Card -->
+            <!-- LLM Model Settings Card -->
             <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="AI Translation Model" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
-                    
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Translation Model type" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <ComboBox SelectedItem="{x:Bind ViewModel.SelectedLlmModel, Mode=TwoWay}" Width="240">
-                            <x:String>Qwen 3 8B GGUF</x:String>
-                            <x:String>Qwen 4B</x:String>
-                            <x:String>Qwen 14B</x:String>
-                        </ComboBox>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="LLM Translation Model" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
+                        <TextBlock Text="Local GGUF model used for English → Vietnamese translation (llama.cpp backend)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
 
                     <StackPanel Spacing="8">
-                        <TextBlock Text="Local Model Path (.gguf)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="Model File Path (.gguf)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
-                            <TextBox Grid.Column="0" Text="{x:Bind ViewModel.LlmModelPath, Mode=TwoWay}" PlaceholderText="C:\models\qwen-8b.gguf" />
-                            <Button Grid.Column="1" Content="Browse..." Style="{ThemeResource DefaultButtonStyle}" />
+                            <TextBox Grid.Column="0" Text="{x:Bind ViewModel.LlmModelPath, Mode=TwoWay}" PlaceholderText="C:\models\Qwen3-8B-Q4_K_M.gguf" />
+                            <Button Grid.Column="1" Content="Browse..." Style="{ThemeResource DefaultButtonStyle}" Click="OnBrowseLlmModelPathClick" />
                         </Grid>
+                        <TextBlock Text="Recommended: Qwen3-8B-Instruct-Q4_K_M.gguf — download from Hugging Face (see guide below)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                     </StackPanel>
 
                     <Grid ColumnDefinitions="*, *" ColumnSpacing="24">
                         <StackPanel Grid.Column="0" Spacing="8">
-                            <TextBlock Text="CPU Inference Threads" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <NumberBox Value="{x:Bind ViewModel.CpuThreads, Mode=TwoWay}" SmallChange="1" LargeChange="2" SpinButtonPlacementMode="Compact" Minimum="1" Maximum="32" Width="160" />
+                            <TextBlock Text="CPU Threads" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <NumberBox Value="{x:Bind ViewModel.CpuThreads, Mode=TwoWay}" Minimum="1" Maximum="32" SmallChange="1" SpinButtonPlacementMode="Compact" Width="160" />
+                            <TextBlock Text="Set to number of physical cores (not logical)" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                         </StackPanel>
-                        
                         <StackPanel Grid.Column="1" Spacing="8">
                             <TextBlock Text="Temperature" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <Slider Value="{x:Bind ViewModel.Temperature, Mode=TwoWay}" Minimum="0.0" Maximum="1.0" StepFrequency="0.05" Width="240" />
+                            <NumberBox Value="{x:Bind ViewModel.Temperature, Mode=TwoWay}" Minimum="0.0" Maximum="2.0" SmallChange="0.05" SpinButtonPlacementMode="Compact" Width="160" />
+                            <TextBlock Text="0.1–0.4 for consistent translation, higher = more creative" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                         </StackPanel>
                     </Grid>
 
-                    <ToggleSwitch Header="Use GPU Acceleration (llama.cpp CUDA/Vulkan)" IsOn="{x:Bind ViewModel.UseGpu, Mode=TwoWay}" />
+                    <ToggleSwitch Header="Use GPU Acceleration (CUDA/Metal)" IsOn="{x:Bind ViewModel.UseGpu, Mode=TwoWay}" />
                 </StackPanel>
             </Border>
 

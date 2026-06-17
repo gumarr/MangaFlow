@@ -47,6 +47,7 @@ public sealed partial class GlossaryPage : Page
         if (ScopeComboBox.SelectedItem is ProjectScopeWrapper selectedWrapper)
         {
             ViewModel.SelectedProject = selectedWrapper.Project;
+            ScopeDescriptionText.Text = $"Showing: {selectedWrapper}";
             await ViewModel.LoadTermsAsync();
         }
     }

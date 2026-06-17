@@ -14,7 +14,6 @@ public static class DependencyInjection
         services.AddSingleton<IContextMemoryService, ContextMemoryService>();
         services.AddSingleton<IBubbleMemoryService, BubbleMemoryService>();
         services.AddScoped<ITranslationContextService, TranslationContextService>();
-        services.AddScoped<ITranslationProvider, StubTranslationProvider>();
         services.AddScoped<ITranslationService, TranslationService>();
         services.AddScoped<IOcrBenchmarkService, OcrBenchmarkService>();
 

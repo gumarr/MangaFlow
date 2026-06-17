@@ -15,6 +15,7 @@ public partial class HomeViewModel : ObservableObject
     private readonly IOcrService _ocrService;
     private readonly IProjectService _projectService;
     private readonly IScreenCaptureService _screenCaptureService;
+    private readonly ISettingsService _settingsService;
     private readonly ILogger<HomeViewModel> _logger;
 
     [ObservableProperty]
@@ -32,6 +33,9 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     private Project? _selectedProject;
 
+    [ObservableProperty]
+    private string _globalHotkey = "Ctrl+Shift+T";
+
     public ObservableCollection<Project> Projects { get; } = new();
 
     public HomeViewModel(
@@ -39,12 +43,14 @@ public partial class HomeViewModel : ObservableObject
         IOcrService ocrService,
         IProjectService projectService,
         IScreenCaptureService screenCaptureService,
+        ISettingsService settingsService,
         ILogger<HomeViewModel> logger)
     {
         _translationService = translationService;
         _ocrService = ocrService;
         _projectService = projectService;
         _screenCaptureService = screenCaptureService;
+        _settingsService = settingsService;
         _logger = logger;
     }
 
@@ -65,6 +71,9 @@ public partial class HomeViewModel : ObservableObject
             {
                 SelectedProject = Projects[0];
             }
+
+            var settings = await _settingsService.GetSettingsAsync();
+            GlobalHotkey = settings.GlobalHotkey;
         }
         catch (Exception ex)
         {

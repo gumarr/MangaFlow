@@ -149,6 +149,22 @@ public class CaptureWorkflow
                 }
             }
 
+            // Auto-copy Vietnamese translation to clipboard
+            if (!string.IsNullOrWhiteSpace(translatedText) && translatedText != "No text to translate.")
+            {
+                try
+                {
+                    var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+                    package.SetText(translatedText);
+                    Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+                    App.LogToFile("Translation auto-copied to clipboard.");
+                }
+                catch (Exception clipEx)
+                {
+                    _logger.LogWarning(clipEx, "Failed to auto-copy translation to clipboard");
+                }
+            }
+
             // 6. Display popup result window
             var resultViewModel = new CaptureResultViewModel();
             await resultViewModel.SetCaptureDataAsync(imageBytes, w, h, timestamp, recognizedText, translatedText);

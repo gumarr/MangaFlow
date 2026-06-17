@@ -21,6 +21,7 @@
                 <NavigationViewItem Content="Glossary" Icon="Character" Tag="Glossary" x:Name="GlossaryItem" />
                 <NavigationViewItem Content="History" Icon="Clock" Tag="History" x:Name="HistoryItem" />
                 <NavigationViewItem Content="OCR Playground" Icon="Target" Tag="OcrPlayground" x:Name="OcrPlaygroundItem" />
+                <NavigationViewItem Content="Translation Playground" Icon="Globe" Tag="TranslationPlayground" x:Name="TranslationPlaygroundItem" />
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame" />

@@ -59,7 +59,13 @@
                         </Button>
                     </Grid>
                     
-                    <TextBlock Text="Press Ctrl+Shift+T from anywhere to trigger screen capture" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Press" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+                        <Border Background="{ThemeResource ControlFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4" Padding="6,2,6,2">
+                            <TextBlock Text="{x:Bind ViewModel.GlobalHotkey, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" FontFamily="Consolas" VerticalAlignment="Center" />
+                        </Border>
+                        <TextBlock Text="from anywhere to trigger screen capture" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

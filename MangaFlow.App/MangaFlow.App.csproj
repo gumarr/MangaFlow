@@ -78,6 +78,26 @@
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
 
+  <!--
+    LLamaSharp.Backend.Cpu ships avx/avx2/avx512/noavx native variants.
+    Keep only avx2 — avx, avx512, noavx cause duplicate destination path errors in the
+    unpackaged WinUI output directory.
+  -->
+  <Target Name="RemoveDuplicateLlamaNativeAssets" AfterTargets="ResolvePackageAssets" BeforeTargets="CopyFilesToOutputDirectory;GenerateProjectPriFile;_GenerateProjectPriFile">
+    <ItemGroup>
+      <RuntimeCopyLocalItems Remove="@(RuntimeCopyLocalItems)"
+        Condition="'%(RuntimeCopyLocalItems.NuGetPackageId)'=='LLamaSharp.Backend.Cpu'
+                   and ($([System.String]::Copy('%(RuntimeCopyLocalItems.Identity)').Contains('\native\avx\'))
+                     or $([System.String]::Copy('%(RuntimeCopyLocalItems.Identity)').Contains('\native\avx512\'))
+                     or $([System.String]::Copy('%(RuntimeCopyLocalItems.Identity)').Contains('\native\noavx\')))" />
+      <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)"
+        Condition="'%(NativeCopyLocalItems.NuGetPackageId)'=='LLamaSharp.Backend.Cpu'
+                   and ($([System.String]::Copy('%(NativeCopyLocalItems.Identity)').Contains('\native\avx\'))
+                     or $([System.String]::Copy('%(NativeCopyLocalItems.Identity)').Contains('\native\avx512\'))
+                     or $([System.String]::Copy('%(NativeCopyLocalItems.Identity)').Contains('\native\noavx\')))" />
+    </ItemGroup>
+  </Target>
+
   <!-- Publish Properties -->
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>

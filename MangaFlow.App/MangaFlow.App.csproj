@@ -102,7 +102,11 @@
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <!--
+      Trimming is DISABLED: WinUI 3, LLamaSharp and EF Core rely heavily on reflection,
+      and the trimmer silently removes types they need, causing crashes that only appear
+      in the published build. The size saving is not worth the breakage.
+    -->
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 </Project>

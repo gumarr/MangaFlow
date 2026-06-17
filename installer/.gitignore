@@ -1,0 +1,3 @@
+# Inno Setup compiler output — large setup .exe, never commit
+Output/
+*.exe

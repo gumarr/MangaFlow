@@ -178,35 +178,10 @@ public class RapidOcrService : IOcrService, IDisposable
                 int originalWidth = originalBitmap.Width;
                 int originalHeight = originalBitmap.Height;
 
-                int maxSide = 1024;
-                bool maxSideConstraintApplied = originalWidth > maxSide || originalHeight > maxSide;
-
-                SKBitmap? resizedBitmap = null;
-                SKBitmap processedBitmap;
-
-                if (maxSideConstraintApplied)
-                {
-                    double ratio = (double)originalWidth / originalHeight;
-                    int newWidth, newHeight;
-                    if (originalWidth > originalHeight)
-                    {
-                        newWidth = maxSide;
-                        newHeight = (int)Math.Round(maxSide / ratio);
-                    }
-                    else
-                    {
-                        newHeight = maxSide;
-                        newWidth = (int)Math.Round(maxSide * ratio);
-                    }
-
-                    resizedBitmap = new SKBitmap(newWidth, newHeight);
-                    originalBitmap.ScalePixels(resizedBitmap, SKFilterQuality.High);
-                    processedBitmap = resizedBitmap;
-                }
-                else
-                {
-                    processedBitmap = originalBitmap;
-                }
+                // NO manual resize — let RapidOcrNet handle resizing internally via LimitSideLen.
+                // Previously we had maxSide=1024 which caused DOUBLE resize (our code + RapidOcrNet),
+                // resulting in text being too small for the detector to find, causing missing lines.
+                SKBitmap processedBitmap = originalBitmap;
 
                 try
                 {
@@ -215,10 +190,8 @@ public class RapidOcrService : IOcrService, IDisposable
 
                     // Extract image DPI using our custom helper
                     var (originalDpiX, originalDpiY) = GetImageDpi(imageBytes);
-                    var (processedDpiX, processedDpiY) = maxSideConstraintApplied ? (96f, 96f) : (originalDpiX, originalDpiY);
 
                     string originalFormat = originalBitmap.ColorType.ToString();
-                    string processedFormat = processedBitmap.ColorType.ToString();
 
                     // Logging details
                     if (isCapture)
@@ -229,12 +202,7 @@ public class RapidOcrService : IOcrService, IDisposable
                         _logger.LogInformation("- DPI: {DpiX}x{DpiY}", originalDpiX, originalDpiY);
                         _logger.LogInformation("- Pixel Format: {Format}", originalFormat);
                         _logger.LogInformation("- File Size: {Size} bytes", imageBytes.Length);
-
-                        _logger.LogInformation("Processed OCR Input details:");
-                        _logger.LogInformation("- Dimensions: {Width}x{Height}", processedWidth, processedHeight);
-                        _logger.LogInformation("- DPI: {DpiX}x{DpiY}", processedDpiX, processedDpiY);
-                        _logger.LogInformation("- Pixel Format: {Format}", processedFormat);
-                        _logger.LogInformation("- Max-side Constraint Applied: {Applied}", maxSideConstraintApplied);
+                        _logger.LogInformation("- Manual Resize: DISABLED (delegated to RapidOcrNet LimitSideLen)");
                         _logger.LogInformation("- Image Cropped Before OCR: True");
                     }
                     else
@@ -245,12 +213,7 @@ public class RapidOcrService : IOcrService, IDisposable
                         _logger.LogInformation("- DPI: {DpiX}x{DpiY}", originalDpiX, originalDpiY);
                         _logger.LogInformation("- Pixel Format: {Format}", originalFormat);
                         _logger.LogInformation("- File Size: {Size} bytes", imageBytes.Length);
-
-                        _logger.LogInformation("Processed OCR Input details:");
-                        _logger.LogInformation("- Dimensions: {Width}x{Height}", processedWidth, processedHeight);
-                        _logger.LogInformation("- DPI: {DpiX}x{DpiY}", processedDpiX, processedDpiY);
-                        _logger.LogInformation("- Pixel Format: {Format}", processedFormat);
-                        _logger.LogInformation("- Max-side Constraint Applied: {Applied}", maxSideConstraintApplied);
+                        _logger.LogInformation("- Manual Resize: DISABLED (delegated to RapidOcrNet LimitSideLen)");
                         _logger.LogInformation("- Image Cropped Before OCR: False");
                     }
 
@@ -314,13 +277,24 @@ public class RapidOcrService : IOcrService, IDisposable
                         _logger.LogError(ex, "Failed to save debug images");
                     }
 
+                    // Configure RapidOcrOptions:
+                    // - LimitSideLen = 1536: Allow larger images for better text detection accuracy
+                    // - BoxThresh = 0.3f: Lower threshold to detect more text regions (fewer missed lines)
+                    var ocrOptions = new RapidOcrOptions
+                    {
+                        LimitSideLen = 1536,
+                        BoxThresh = 0.3f
+                    };
+                    _logger.LogInformation("RapidOcr Options: LimitSideLen={LimitSideLen}, BoxThresh={BoxThresh}", 
+                        ocrOptions.LimitSideLen, ocrOptions.BoxThresh);
+
                     lock (_lock)
                     {
                         if (_ocrEngine == null)
                         {
                             throw new InvalidOperationException("OCR engine is not initialized");
                         }
-                        ocrResult = _ocrEngine.Detect(processedBitmap, new RapidOcrOptions());
+                        ocrResult = _ocrEngine.Detect(processedBitmap, ocrOptions);
                     }
 
                     int boxCount = ocrResult.TextBlocks?.Length ?? 0;
@@ -400,7 +374,7 @@ public class RapidOcrService : IOcrService, IDisposable
                 }
                 finally
                 {
-                    resizedBitmap?.Dispose();
+                    // No manual resize bitmap to dispose — RapidOcrNet handles resizing internally
                 }
             }
 

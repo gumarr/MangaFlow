@@ -125,13 +125,13 @@ public partial class HomeViewModel : ObservableObject
             RecognizedText = ocrResult.FullText;
             TranslatedText = "Running local LLM translation...";
             
-            var translation = await _translationService.TranslateAsync(
+            var translationResult = await _translationService.TranslateAsync(
                 SelectedProject.Id,
                 ocrResult.FullText,
                 SelectedProject.SourceLanguage,
                 SelectedProject.TargetLanguage);
 
-            TranslatedText = translation;
+            TranslatedText = translationResult.TranslatedText;
         }
         catch (Exception ex)
         {

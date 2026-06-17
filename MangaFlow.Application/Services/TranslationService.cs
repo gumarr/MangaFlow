@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MangaFlow.Application.DTOs;
 using MangaFlow.Application.Interfaces;
 using MangaFlow.Application.Persistence;
 using MangaFlow.Domain.Entities;
@@ -11,35 +12,46 @@ public class TranslationService : ITranslationService
 {
     private readonly ITranslationMemoryRepository _tmRepository;
     private readonly ITranslationHistoryRepository _historyRepository;
-    private readonly IGlossaryService _glossaryService;
-    private readonly IContextMemoryService _contextMemoryService;
-    private readonly ITranslationEngine _translationEngine;
+    private readonly ITranslationContextService _contextService;
+    private readonly ITranslationProvider _translationProvider;
+    private readonly IBubbleMemoryService _bubbleMemoryService;
     private readonly ILogger<TranslationService> _logger;
 
     public TranslationService(
         ITranslationMemoryRepository tmRepository,
         ITranslationHistoryRepository historyRepository,
-        IGlossaryService glossaryService,
-        IContextMemoryService contextMemoryService,
-        ITranslationEngine translationEngine,
+        ITranslationContextService contextService,
+        ITranslationProvider translationProvider,
+        IBubbleMemoryService bubbleMemoryService,
         ILogger<TranslationService> logger)
     {
         _tmRepository = tmRepository;
         _historyRepository = historyRepository;
-        _glossaryService = glossaryService;
-        _contextMemoryService = contextMemoryService;
-        _translationEngine = translationEngine;
+        _contextService = contextService;
+        _translationProvider = translationProvider;
+        _bubbleMemoryService = bubbleMemoryService;
         _logger = logger;
     }
 
-    public async Task<string> TranslateAsync(Guid projectId, string text, string sourceLanguage, string targetLanguage)
+    public async Task<TranslationResult> TranslateAsync(Guid projectId, string text, string sourceLanguage, string targetLanguage, string sourceImageHash = "")
     {
-        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return new TranslationResult
+            {
+                TranslatedText = string.Empty,
+                ProviderName = _translationProvider.Name,
+                IsSuccess = true,
+                ElapsedMilliseconds = 0
+            };
+        }
 
         _logger.LogInformation("Starting translation pipeline for project {ProjectId}, text: '{Text}'", projectId, text);
 
         try
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             // Layer 1: Series Translation Memory lookup
             _logger.LogDebug("Looking up in Series Translation Memory...");
             var match = await _tmRepository.FindMatchAsync(text, projectId);
@@ -49,13 +61,21 @@ public class TranslationService : ITranslationService
                 match.LastUsedAt = DateTime.UtcNow;
                 await _tmRepository.UpdateAsync(match);
 
-                // Add to recent context
-                _contextMemoryService.AddContext(projectId, text, match.TranslatedText);
+                stopwatch.Stop();
+
+                // Add to bubble memory
+                _bubbleMemoryService.AddBubble(text, match.TranslatedText, sourceImageHash);
 
                 // Add to history
                 await SaveToHistoryAsync(projectId, text, match.TranslatedText);
 
-                return match.TranslatedText;
+                return new TranslationResult
+                {
+                    TranslatedText = match.TranslatedText,
+                    ProviderName = "TranslationMemory",
+                    IsSuccess = true,
+                    ElapsedMilliseconds = stopwatch.ElapsedMilliseconds
+                };
             }
 
             // Layer 2: Global Translation Memory lookup
@@ -67,53 +87,68 @@ public class TranslationService : ITranslationService
                 match.LastUsedAt = DateTime.UtcNow;
                 await _tmRepository.UpdateAsync(match);
 
-                // Add to recent context
-                _contextMemoryService.AddContext(projectId, text, match.TranslatedText);
+                stopwatch.Stop();
+
+                // Add to bubble memory
+                _bubbleMemoryService.AddBubble(text, match.TranslatedText, sourceImageHash);
 
                 // Add to history
                 await SaveToHistoryAsync(projectId, text, match.TranslatedText);
 
-                return match.TranslatedText;
+                return new TranslationResult
+                {
+                    TranslatedText = match.TranslatedText,
+                    ProviderName = "TranslationMemory",
+                    IsSuccess = true,
+                    ElapsedMilliseconds = stopwatch.ElapsedMilliseconds
+                };
             }
 
-            // Layer 3: Translation via LLM Engine with Glossary & Context Memory
-            _logger.LogDebug("No translation memory match. Proceeding to LLM translation...");
+            // Layer 3: Translation via Provider with TranslationContext
+            _logger.LogDebug("No translation memory match. Proceeding to translation provider...");
 
-            // Get Glossary context prompt
-            var glossaryPrompt = await _glossaryService.BuildGlossaryPromptAsync(projectId, text);
+            // Get translation context (recent bubbles + matched glossary terms)
+            var context = await _contextService.GetTranslationContextAsync(projectId, text);
 
-            // Get Context memory prompt
-            var contextPrompt = _contextMemoryService.BuildContextPrompt(projectId);
+            // Call the provider
+            var result = await _translationProvider.TranslateAsync(text, sourceLanguage, targetLanguage, context);
 
-            // Translate using the engine
-            var translatedText = await _translationEngine.TranslateAsync(text, sourceLanguage, targetLanguage, glossaryPrompt, contextPrompt);
-            translatedText = translatedText.Trim();
-
-            // Save new translation to Series Translation Memory for future reuse
-            var tmEntry = new TranslationMemoryEntry
+            if (result.IsSuccess)
             {
-                Id = Guid.NewGuid(),
-                ProjectId = projectId,
-                SourceText = text.Trim(),
-                TranslatedText = translatedText,
-                CreatedAt = DateTime.UtcNow,
-                LastUsedAt = DateTime.UtcNow
-            };
-            await _tmRepository.AddAsync(tmEntry);
+                result.TranslatedText = result.TranslatedText.Trim();
 
-            // Add to recent context
-            _contextMemoryService.AddContext(projectId, text, translatedText);
+                // Save new translation to Series Translation Memory for future reuse
+                var tmEntry = new TranslationMemoryEntry
+                {
+                    Id = Guid.NewGuid(),
+                    ProjectId = projectId,
+                    SourceText = text.Trim(),
+                    TranslatedText = result.TranslatedText,
+                    CreatedAt = DateTime.UtcNow,
+                    LastUsedAt = DateTime.UtcNow
+                };
+                await _tmRepository.AddAsync(tmEntry);
 
-            // Add to history
-            await SaveToHistoryAsync(projectId, text, translatedText);
+                // Add to bubble memory
+                _bubbleMemoryService.AddBubble(text, result.TranslatedText, sourceImageHash);
 
-            _logger.LogInformation("Translation completed successfully: '{Translated}'", translatedText);
-            return translatedText;
+                // Add to history
+                await SaveToHistoryAsync(projectId, text, result.TranslatedText);
+            }
+
+            _logger.LogInformation("Translation completed successfully: '{Translated}'", result.TranslatedText);
+            return result;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed translation pipeline for text: '{Text}'", text);
-            throw;
+            return new TranslationResult
+            {
+                TranslatedText = string.Empty,
+                ProviderName = _translationProvider.Name,
+                IsSuccess = false,
+                ErrorMessage = ex.Message
+            };
         }
     }
 
@@ -125,7 +160,7 @@ public class TranslationService : ITranslationService
             ProjectId = projectId,
             SourceText = sourceText,
             TranslatedText = translatedText,
-            ContextSnapshot = string.Empty, // Could serialize recent context if needed
+            ContextSnapshot = string.Empty,
             CreatedAt = DateTime.UtcNow
         };
         await _historyRepository.AddAsync(historyItem);

@@ -38,12 +38,8 @@
                         
                         <StackPanel Grid.Column="1" Spacing="8">
                             <TextBlock Text="Default OCR Language" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <ComboBox SelectedItem="{x:Bind ViewModel.OcrLanguage, Mode=TwoWay}" Width="240">
-                                <x:String>Japanese</x:String>
+                            <ComboBox SelectedItem="{x:Bind ViewModel.OcrLanguage, Mode=TwoWay}" Width="240" IsEnabled="False">
                                 <x:String>English</x:String>
-                                <x:String>Chinese</x:String>
-                                <x:String>Korean</x:String>
-                                <x:String>Vietnamese</x:String>
                             </ComboBox>
                         </StackPanel>
                     </Grid>

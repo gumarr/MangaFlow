@@ -28,6 +28,9 @@ public partial class GlossaryViewModel : ObservableObject
     [ObservableProperty]
     private bool _newIsLocked;
 
+    [ObservableProperty]
+    private int _newPriority;
+
     public ObservableCollection<Project?> Projects { get; } = new();
     public ObservableCollection<GlossaryTerm> Terms { get; } = new();
 
@@ -104,12 +107,13 @@ public partial class GlossaryViewModel : ObservableObject
         try
         {
             Guid? projectId = SelectedProject?.Id;
-            await _glossaryService.AddTermAsync(projectId, NewSourceText, NewTargetText, NewIsLocked);
+            await _glossaryService.AddTermAsync(projectId, NewSourceText, NewTargetText, NewIsLocked, NewPriority);
             
             // Clear fields
             NewSourceText = string.Empty;
             NewTargetText = string.Empty;
             NewIsLocked = false;
+            NewPriority = 0;
 
             await LoadTermsAsync();
         }

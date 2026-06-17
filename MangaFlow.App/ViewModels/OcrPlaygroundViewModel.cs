@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using MangaFlow.Application.Interfaces;
 using Microsoft.UI.Xaml.Media.Imaging;
+using SkiaSharp;
 
 namespace MangaFlow.App.ViewModels;
 
@@ -30,6 +31,21 @@ public partial class OcrPlaygroundViewModel : ObservableObject
     private string _confidenceText = string.Empty;
 
     [ObservableProperty]
+    private string _detectorPathText = string.Empty;
+
+    [ObservableProperty]
+    private string _recognizerPathText = string.Empty;
+
+    [ObservableProperty]
+    private string _dictionaryPathText = string.Empty;
+
+    [ObservableProperty]
+    private string _sourceText = string.Empty;
+
+    [ObservableProperty]
+    private string _languageText = string.Empty;
+
+    [ObservableProperty]
     private bool _isRunning;
 
     [ObservableProperty]
@@ -43,6 +59,7 @@ public partial class OcrPlaygroundViewModel : ObservableObject
         _ocrService = ocrService;
         _settingsService = settingsService;
         _logger = logger;
+        UpdateDiagnostics();
     }
 
     [RelayCommand]
@@ -144,7 +161,143 @@ public partial class OcrPlaygroundViewModel : ObservableObject
         }
         finally
         {
+            UpdateDiagnostics();
             IsRunning = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task LoadLastCaptureAsync()
+    {
+        try
+        {
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string captureInputPath = Path.Combine(localAppData, "MangaFlow", "debug", "capture_input.png");
+            
+            if (!File.Exists(captureInputPath))
+            {
+                OcrResultText = "No previous capture_input.png found. Please run screen capture first.";
+                return;
+            }
+
+            SelectedImagePath = captureInputPath;
+
+            // Load preview
+            var bitmap = new BitmapImage();
+            using (var stream = File.OpenRead(captureInputPath))
+            {
+                await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
+            }
+            SelectedImagePreview = bitmap;
+            OcrResultText = "Loaded capture_input.png. Click 'Run OCR' to run.";
+            ExecutionTimeText = string.Empty;
+            ConfidenceText = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load last capture input.");
+            OcrResultText = $"Failed to load capture_input.png: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task RunTestCaseAsync(string testType)
+    {
+        string text = testType switch
+        {
+            "Simple" => "Hello, this is a simple English test.",
+            "Paragraph" => "MangaFlow v1.0 features English OCR and Vietnamese translation support.",
+            "Mixed" => "Let's test numbers: 12345, and symbols: !@#$%^&*()_+.",
+            "Uppercase" => "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.",
+            _ => "This is a default test."
+        };
+
+        try
+        {
+            string path = GenerateTestImage(text);
+            SelectedImagePath = path;
+
+            // Load preview
+            var bitmap = new BitmapImage();
+            using (var stream = File.OpenRead(path))
+            {
+                await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
+            }
+            SelectedImagePreview = bitmap;
+
+            // Automatically trigger OCR execution
+            await RunOcrAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to run test case: {TestType}", testType);
+            OcrResultText = $"Failed to generate test image: {ex.Message}";
+        }
+    }
+
+    private string GenerateTestImage(string text)
+    {
+        var tempFolder = Path.Combine(Path.GetTempPath(), "MangaFlow");
+        if (!Directory.Exists(tempFolder))
+        {
+            Directory.CreateDirectory(tempFolder);
+        }
+
+        var tempPath = Path.Combine(tempFolder, $"test_{Guid.NewGuid()}.png");
+
+        using (var bitmap = new SKBitmap(600, 150))
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            canvas.Clear(SKColors.White);
+
+            using (var paint = new SKPaint())
+            using (var font = new SKFont(SKTypeface.FromFamilyName("Arial"), 24))
+            {
+                paint.Color = SKColors.Black;
+                paint.IsAntialias = true;
+
+                // Draw background box/border for contrast
+                using (var borderPaint = new SKPaint())
+                {
+                    borderPaint.Color = SKColors.LightGray;
+                    borderPaint.Style = SKPaintStyle.Stroke;
+                    borderPaint.StrokeWidth = 2;
+                    canvas.DrawRect(new SKRect(10, 10, 590, 140), borderPaint);
+                }
+
+                // Draw the text in the middle
+                canvas.DrawText(text, 30, 85, font, paint);
+            }
+
+            using (var image = SKImage.FromBitmap(bitmap))
+            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            using (var stream = File.OpenWrite(tempPath))
+            {
+                data.SaveTo(stream);
+            }
+        }
+
+        return tempPath;
+    }
+
+    private void UpdateDiagnostics()
+    {
+        var diag = _ocrService.GetDiagnostics();
+        if (diag != null)
+        {
+            DetectorPathText = diag.DetectorPath;
+            RecognizerPathText = diag.RecognizerPath;
+            DictionaryPathText = diag.DictionaryPath;
+            SourceText = diag.Source;
+            LanguageText = diag.Language;
+        }
+        else
+        {
+            DetectorPathText = "Not Initialized";
+            RecognizerPathText = "Not Initialized";
+            DictionaryPathText = "Not Initialized";
+            SourceText = "Not Initialized";
+            LanguageText = "Not Initialized";
         }
     }
 }

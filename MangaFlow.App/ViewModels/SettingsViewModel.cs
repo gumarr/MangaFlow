@@ -19,7 +19,7 @@ public partial class SettingsViewModel : ObservableObject
     private AppSettings? _settings;
 
     [ObservableProperty]
-    private string _ocrLanguage = "Japanese";
+    private string _ocrLanguage = "English";
 
     [ObservableProperty]
     private string _ocrEngine = "RapidOCR";
@@ -46,10 +46,10 @@ public partial class SettingsViewModel : ObservableObject
     private string _globalHotkey = "Alt + Q";
 
     [ObservableProperty]
-    private string _defaultSourceLanguage = "Japanese";
+    private string _defaultSourceLanguage = "English";
 
     [ObservableProperty]
-    private string _defaultTargetLanguage = "English";
+    private string _defaultTargetLanguage = "Vietnamese";
 
     [ObservableProperty]
     private bool _showCapturePreview = false;

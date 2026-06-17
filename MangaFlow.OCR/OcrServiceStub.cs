@@ -29,6 +29,18 @@ public class OcrServiceStub : IOcrService
         return Task.CompletedTask;
     }
 
+    public OcrDiagnostics? GetDiagnostics()
+    {
+        return new OcrDiagnostics
+        {
+            DetectorPath = "stub_det.onnx",
+            RecognizerPath = "stub_rec.onnx",
+            DictionaryPath = "stub_dict.txt",
+            Source = "Embedded",
+            Language = "English"
+        };
+    }
+
     private OcrResult CreateMockResult(string language)
     {
         var result = new OcrResult();

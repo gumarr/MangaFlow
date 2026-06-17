@@ -24,16 +24,40 @@
                           HorizontalScrollBarVisibility="Disabled"
                           VerticalAlignment="Stretch"
                           HorizontalAlignment="Stretch">
-                <TextBlock x:Name="OcrTextBlock"
-                           Text="{x:Bind ViewModel.RecognizedText, Mode=OneWay}"
-                           IsTextSelectionEnabled="True"
-                           TextWrapping="Wrap"
-                           FontFamily="Segoe UI, Segoe UI Variable"
-                           FontSize="16"
-                           LineHeight="24"
-                           LineStackingStrategy="BlockLineHeight"
-                           VerticalAlignment="Top"
-                           HorizontalAlignment="Stretch"/>
+                <StackPanel Spacing="12" HorizontalAlignment="Stretch">
+                    <!-- Translated Text (Vietnamese) -->
+                    <TextBlock x:Name="TranslationTextBlock"
+                               Text="{x:Bind ViewModel.TranslatedText, Mode=OneWay}"
+                               IsTextSelectionEnabled="True"
+                               TextWrapping="Wrap"
+                               FontFamily="Segoe UI, Segoe UI Variable"
+                               FontSize="18"
+                               FontWeight="SemiBold"
+                               LineHeight="26"
+                               LineStackingStrategy="BlockLineHeight"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Stretch"/>
+
+                    <!-- Separator line -->
+                    <Border BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}" 
+                            BorderThickness="0,0,0,1" 
+                            Height="1" 
+                            Margin="0,4,0,4"
+                            HorizontalAlignment="Stretch"/>
+
+                    <!-- Original Text (English) -->
+                    <TextBlock x:Name="OcrTextBlock"
+                               Text="{x:Bind ViewModel.RecognizedText, Mode=OneWay}"
+                               IsTextSelectionEnabled="True"
+                               TextWrapping="Wrap"
+                               FontFamily="Segoe UI, Segoe UI Variable"
+                               FontSize="14"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               LineHeight="20"
+                               LineStackingStrategy="BlockLineHeight"
+                               VerticalAlignment="Top"
+                               HorizontalAlignment="Stretch"/>
+                </StackPanel>
             </ScrollViewer>
         </Border>
     </Grid>

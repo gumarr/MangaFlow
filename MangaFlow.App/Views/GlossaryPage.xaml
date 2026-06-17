@@ -50,13 +50,18 @@
                         <TextBlock Text="Add New Term" Style="{ThemeResource SubtitleTextBlockStyle}" FontWeight="SemiBold" />
                         
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Source Text (e.g. Japanese)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBox Text="{x:Bind ViewModel.NewSourceText, Mode=TwoWay}" PlaceholderText="勇者" />
+                            <TextBlock Text="Source Text (e.g. English)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox Text="{x:Bind ViewModel.NewSourceText, Mode=TwoWay}" PlaceholderText="Mana Crystal" />
                         </StackPanel>
 
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Target Text (e.g. English)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBox Text="{x:Bind ViewModel.NewTargetText, Mode=TwoWay}" PlaceholderText="Hero" />
+                            <TextBlock Text="Target Text (e.g. Vietnamese)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBox Text="{x:Bind ViewModel.NewTargetText, Mode=TwoWay}" PlaceholderText="Tinh Thạch Ma Lực" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Priority" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <NumberBox Value="{x:Bind ViewModel.NewPriority, Mode=TwoWay}" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Compact" Minimum="0" Maximum="100" Width="120" />
                         </StackPanel>
 
                         <CheckBox Content="Lock Translation (Force LLM usage)" IsChecked="{x:Bind ViewModel.NewIsLocked, Mode=TwoWay}" />
@@ -72,21 +77,23 @@
             <!-- Right Panel: Terms List -->
             <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="24">
                 <Grid RowDefinitions="Auto, *">
-                    <Grid Grid.Row="0" ColumnDefinitions="*, *, Auto, Auto" Padding="12,0,12,8" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8">
+                    <Grid Grid.Row="0" ColumnDefinitions="*, *, Auto, Auto, Auto" Padding="12,0,12,8" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8">
                         <TextBlock Grid.Column="0" Text="Source Term" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <TextBlock Grid.Column="1" Text="Translation" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <TextBlock Grid.Column="2" Text="Locked" Style="{ThemeResource BodyStrongTextBlockStyle}" Width="80" TextAlignment="Center" />
-                        <TextBlock Grid.Column="3" Text="Action" Style="{ThemeResource BodyStrongTextBlockStyle}" Width="60" TextAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="Priority" Style="{ThemeResource BodyStrongTextBlockStyle}" Width="80" TextAlignment="Center" />
+                        <TextBlock Grid.Column="3" Text="Locked" Style="{ThemeResource BodyStrongTextBlockStyle}" Width="80" TextAlignment="Center" />
+                        <TextBlock Grid.Column="4" Text="Action" Style="{ThemeResource BodyStrongTextBlockStyle}" Width="60" TextAlignment="Center" />
                     </Grid>
 
                     <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Terms, Mode=OneWay}" SelectionMode="None">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="entities:GlossaryTerm">
-                                <Grid ColumnDefinitions="*, *, Auto, Auto" Padding="0,8,0,8">
+                                <Grid ColumnDefinitions="*, *, Auto, Auto, Auto" Padding="0,8,0,8">
                                     <TextBlock Grid.Column="0" Text="{x:Bind SourceText}" VerticalAlignment="Center" />
                                     <TextBlock Grid.Column="1" Text="{x:Bind TargetText}" VerticalAlignment="Center" />
-                                    <CheckBox Grid.Column="2" IsChecked="{x:Bind IsLocked}" IsEnabled="False" Width="80" HorizontalAlignment="Center" />
-                                    <Button Grid.Column="3" 
+                                    <TextBlock Grid.Column="2" Text="{x:Bind Priority}" VerticalAlignment="Center" Width="80" TextAlignment="Center" />
+                                    <CheckBox Grid.Column="3" IsChecked="{x:Bind IsLocked}" IsEnabled="False" Width="80" HorizontalAlignment="Center" />
+                                    <Button Grid.Column="4" 
                                             Content="Delete" 
                                             Click="OnDeleteTermClick"
                                             Style="{ThemeResource DefaultButtonStyle}" 

@@ -9,7 +9,7 @@ public interface IGlossaryService
 {
     Task<IEnumerable<GlossaryTerm>> GetProjectGlossaryAsync(Guid projectId);
     Task<IEnumerable<GlossaryTerm>> GetGlobalGlossaryAsync();
-    Task AddTermAsync(Guid? projectId, string sourceText, string targetText, bool isLocked);
+    Task AddTermAsync(Guid? projectId, string sourceText, string targetText, bool isLocked, int priority = 0);
     Task UpdateTermAsync(GlossaryTerm term);
     Task DeleteTermAsync(Guid id);
     Task<string> BuildGlossaryPromptAsync(Guid projectId, string text);

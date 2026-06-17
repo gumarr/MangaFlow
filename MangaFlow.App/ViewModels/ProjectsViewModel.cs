@@ -29,10 +29,10 @@ public partial class ProjectsViewModel : ObservableObject
     private string _newProjectDescription = string.Empty;
 
     [ObservableProperty]
-    private string _newProjectSourceLanguage = "Japanese";
+    private string _newProjectSourceLanguage = "English";
 
     [ObservableProperty]
-    private string _newProjectTargetLanguage = "English";
+    private string _newProjectTargetLanguage = "Vietnamese";
 
     [ObservableProperty]
     private string _newProjectFolderPath = string.Empty;

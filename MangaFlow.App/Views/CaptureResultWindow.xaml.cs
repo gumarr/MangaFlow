@@ -173,7 +173,7 @@ public sealed partial class CaptureResultWindow : Window
                         try
                         {
                             var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
-                            package.SetText(OcrTextBlock.Text);
+                            package.SetText(TranslationTextBlock.Text);
                             Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
                         }
                         catch { }

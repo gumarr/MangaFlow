@@ -35,9 +35,9 @@ public class GlossaryService : IGlossaryService
         return await _glossaryRepository.GetGlobalTermsAsync();
     }
 
-    public async Task AddTermAsync(Guid? projectId, string sourceText, string targetText, bool isLocked)
+    public async Task AddTermAsync(Guid? projectId, string sourceText, string targetText, bool isLocked, int priority = 0)
     {
-        _logger.LogInformation("Adding glossary term: '{SourceText}' -> '{TargetText}'", sourceText, targetText);
+        _logger.LogInformation("Adding glossary term: '{SourceText}' -> '{TargetText}' (Priority: {Priority})", sourceText, targetText, priority);
         var term = new GlossaryTerm
         {
             Id = Guid.NewGuid(),
@@ -45,6 +45,7 @@ public class GlossaryService : IGlossaryService
             SourceText = sourceText.Trim(),
             TargetText = targetText.Trim(),
             IsLocked = isLocked,
+            Priority = priority,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -113,7 +114,7 @@ public class GlossaryService : IGlossaryService
 
             foreach (var dto in termsDto)
             {
-                await AddTermAsync(projectId, dto.SourceText, dto.TargetText, dto.IsLocked);
+                await AddTermAsync(projectId, dto.SourceText, dto.TargetText, dto.IsLocked, dto.Priority);
             }
 
             _logger.LogInformation("Successfully imported {Count} terms", termsDto.Count);
@@ -144,7 +145,8 @@ public class GlossaryService : IGlossaryService
             {
                 SourceText = t.SourceText,
                 TargetText = t.TargetText,
-                IsLocked = t.IsLocked
+                IsLocked = t.IsLocked,
+                Priority = t.Priority
             }).ToList();
 
             var json = JsonSerializer.Serialize(dtos, new JsonSerializerOptions { WriteIndented = true });
@@ -170,5 +172,6 @@ public class GlossaryService : IGlossaryService
         public string SourceText { get; set; } = string.Empty;
         public string TargetText { get; set; } = string.Empty;
         public bool IsLocked { get; set; }
+        public int Priority { get; set; }
     }
 }

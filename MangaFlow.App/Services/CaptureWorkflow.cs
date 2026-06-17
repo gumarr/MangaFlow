@@ -86,14 +86,20 @@ public class CaptureWorkflow
             var timestamp = DateTime.UtcNow;
             var imageBytes = await _screenCaptureService.CropImageAsync(fullScreenBytes, (int)x, (int)y, (int)w, (int)h);
 
-            // 5. Run OCR using the DI registered services
+            // 5. Run OCR and Translation using the DI registered services
             string recognizedText = string.Empty;
+            string translatedText = string.Empty;
             long ocrInferenceTimeMs = 0;
+            long translationInferenceTimeMs = 0;
+
             using (var scope = _serviceProvider.CreateScope())
             {
                 var settingsService = scope.ServiceProvider.GetRequiredService<ISettingsService>();
+                var projectService = scope.ServiceProvider.GetRequiredService<IProjectService>();
+                var translationService = scope.ServiceProvider.GetRequiredService<ITranslationService>();
+
                 var settings = await settingsService.GetSettingsAsync();
-                string language = settings?.OcrLanguage ?? "Japanese";
+                string language = settings?.OcrLanguage ?? "English";
 
                 var ocrStopwatch = System.Diagnostics.Stopwatch.StartNew();
                 var ocrResult = await _ocrService.RecognizeTextAsync(imageBytes, language);
@@ -101,23 +107,59 @@ public class CaptureWorkflow
                 ocrInferenceTimeMs = ocrStopwatch.ElapsedMilliseconds;
 
                 recognizedText = ocrResult?.FullText?.Trim() ?? string.Empty;
-                if (string.IsNullOrEmpty(recognizedText))
+
+                if (!string.IsNullOrEmpty(recognizedText))
+                {
+                    // Find active project or use a default one
+                    var projects = await projectService.GetAllProjectsAsync();
+                    var activeProject = projects.FirstOrDefault();
+                    Guid projectId = activeProject?.Id ?? Guid.Empty;
+                    string sourceLang = activeProject?.SourceLanguage ?? "English";
+                    string targetLang = activeProject?.TargetLanguage ?? "Vietnamese";
+
+                    // Compute source image hash
+                    string imageHash = string.Empty;
+                    try
+                    {
+                        using var sha255 = System.Security.Cryptography.SHA256.Create();
+                        var hashBytes = sha255.ComputeHash(imageBytes);
+                        imageHash = Convert.ToHexString(hashBytes);
+                    }
+                    catch
+                    {
+                        imageHash = Guid.NewGuid().ToString("N");
+                    }
+
+                    var translationStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    var translationResult = await translationService.TranslateAsync(
+                        projectId, 
+                        recognizedText, 
+                        sourceLang, 
+                        targetLang, 
+                        imageHash);
+                    translationStopwatch.Stop();
+                    translationInferenceTimeMs = translationStopwatch.ElapsedMilliseconds;
+
+                    translatedText = translationResult?.TranslatedText ?? string.Empty;
+                }
+                else
                 {
                     recognizedText = "No text detected.";
+                    translatedText = "No text to translate.";
                 }
             }
 
             // 6. Display popup result window
             var resultViewModel = new CaptureResultViewModel();
-            await resultViewModel.SetCaptureDataAsync(imageBytes, w, h, timestamp, recognizedText);
+            await resultViewModel.SetCaptureDataAsync(imageBytes, w, h, timestamp, recognizedText, translatedText);
 
             _activeResultWindow = new CaptureResultWindow(resultViewModel, x, y, w, h);
             _activeResultWindow.Activate();
 
             totalStopwatch.Stop();
-            _logger.LogInformation("OCR inference time: {OcrTime} ms", ocrInferenceTimeMs);
+            _logger.LogInformation("OCR time: {OcrTime} ms | Translation time: {TranslationTime} ms", ocrInferenceTimeMs, translationInferenceTimeMs);
             _logger.LogInformation("Total workflow time: {TotalTime} ms", totalStopwatch.ElapsedMilliseconds);
-            App.LogToFile($"OCR inference time: {ocrInferenceTimeMs} ms | Total workflow time: {totalStopwatch.ElapsedMilliseconds} ms");
+            App.LogToFile($"OCR time: {ocrInferenceTimeMs} ms | Translation time: {translationInferenceTimeMs} ms | Total workflow time: {totalStopwatch.ElapsedMilliseconds} ms");
             _logger.LogInformation("Capture result window opened.");
             App.LogToFile("Capture result window opened.");
         }

@@ -29,7 +29,7 @@ public class AppSettingsRepository : IAppSettingsRepository
             settings = new AppSettings
             {
                 Id = Guid.NewGuid(),
-                OcrLanguage = "Japanese",
+                OcrLanguage = "English",
                 OcrEngine = "RapidOCR",
                 OcrModelPath = defaultModelPath,
                 SelectedLlmModel = "Qwen 3 8B GGUF",
@@ -38,8 +38,8 @@ public class AppSettingsRepository : IAppSettingsRepository
                 Temperature = 0.3,
                 UseGpu = true,
                 GlobalHotkey = "Alt+Q",
-                DefaultSourceLanguage = "Japanese",
-                DefaultTargetLanguage = "English",
+                DefaultSourceLanguage = "English",
+                DefaultTargetLanguage = "Vietnamese",
                 ShowCapturePreview = false,
                 UpdatedAt = DateTime.UtcNow
             };

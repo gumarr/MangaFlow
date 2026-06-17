@@ -67,6 +67,17 @@
 
                     <!-- Control Buttons -->
                     <StackPanel Grid.Row="1" Spacing="12">
+                        <TextBlock Text="Preset English Test Cases" FontWeight="SemiBold" FontSize="14"/>
+                        <Grid ColumnDefinitions="*,*,*,*,*" ColumnSpacing="8">
+                            <Button Grid.Column="0" Content="Simple" Command="{x:Bind ViewModel.RunTestCaseCommand}" CommandParameter="Simple" HorizontalAlignment="Stretch" IsEnabled="{x:Bind ViewModel.IsRunning, Converter={StaticResource BooleanNegationConverter}, Mode=OneWay}"/>
+                            <Button Grid.Column="1" Content="Paragraph" Command="{x:Bind ViewModel.RunTestCaseCommand}" CommandParameter="Paragraph" HorizontalAlignment="Stretch" IsEnabled="{x:Bind ViewModel.IsRunning, Converter={StaticResource BooleanNegationConverter}, Mode=OneWay}"/>
+                            <Button Grid.Column="2" Content="Mixed" Command="{x:Bind ViewModel.RunTestCaseCommand}" CommandParameter="Mixed" HorizontalAlignment="Stretch" IsEnabled="{x:Bind ViewModel.IsRunning, Converter={StaticResource BooleanNegationConverter}, Mode=OneWay}"/>
+                            <Button Grid.Column="3" Content="Uppercase" Command="{x:Bind ViewModel.RunTestCaseCommand}" CommandParameter="Uppercase" HorizontalAlignment="Stretch" IsEnabled="{x:Bind ViewModel.IsRunning, Converter={StaticResource BooleanNegationConverter}, Mode=OneWay}"/>
+                            <Button Grid.Column="4" Content="Last Capture" Command="{x:Bind ViewModel.LoadLastCaptureCommand}" HorizontalAlignment="Stretch" IsEnabled="{x:Bind ViewModel.IsRunning, Converter={StaticResource BooleanNegationConverter}, Mode=OneWay}"/>
+                        </Grid>
+                        
+                        <MenuFlyoutSeparator Margin="0,4,0,4"/>
+
                         <TextBlock Text="{x:Bind ViewModel.SelectedImagePath, Mode=OneWay}" 
                                    FontSize="12"
                                    TextWrapping="Wrap"
@@ -138,21 +149,45 @@
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="24">
-                    <StackPanel Spacing="8">
+                    <StackPanel Spacing="12">
                         <TextBlock Text="Performance &amp; Statistics" 
                                    FontWeight="SemiBold" 
                                    FontSize="16"
-                                   Margin="0,0,0,8"/>
+                                   Margin="0,0,0,4"/>
                         <Grid ColumnDefinitions="*,*">
                             <TextBlock Grid.Column="0" 
-                                       Text="{x:Bind ViewModel.ConfidenceText, Mode=OneWay}" 
-                                       FontWeight="Medium"
-                                       FontSize="14"/>
+                                        Text="{x:Bind ViewModel.ConfidenceText, Mode=OneWay}" 
+                                        FontWeight="Medium"
+                                        FontSize="14"/>
                             <TextBlock Grid.Column="1" 
-                                       Text="{x:Bind ViewModel.ExecutionTimeText, Mode=OneWay}" 
-                                       FontWeight="Medium"
-                                       FontSize="14"
-                                       HorizontalAlignment="Right"/>
+                                        Text="{x:Bind ViewModel.ExecutionTimeText, Mode=OneWay}" 
+                                        FontWeight="Medium"
+                                        FontSize="14"
+                                        HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <MenuFlyoutSeparator Margin="0,4,0,4"/>
+
+                        <TextBlock Text="OCR Engine Startup Diagnostics" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="14"
+                                   Margin="0,4,0,4"/>
+
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="Auto,*" RowSpacing="6" ColumnSpacing="12">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Detector:" FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.DetectorPathText, Mode=OneWay}" TextWrapping="Wrap" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Recognizer:" FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.RecognizerPathText, Mode=OneWay}" TextWrapping="Wrap" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Dictionary:" FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.DictionaryPathText, Mode=OneWay}" TextWrapping="Wrap" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Source:" FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind ViewModel.SourceText, Mode=OneWay}" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Language:" FontWeight="SemiBold" FontSize="13"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{x:Bind ViewModel.LanguageText, Mode=OneWay}" FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                         </Grid>
                     </StackPanel>
                 </Border>

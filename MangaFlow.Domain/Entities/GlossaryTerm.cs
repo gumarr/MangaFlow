@@ -9,6 +9,7 @@ public class GlossaryTerm
     public string SourceText { get; set; } = string.Empty;
     public string TargetText { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
+    public int Priority { get; set; } // Glossary term translation priority
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -18,4 +18,9 @@ public interface IOcrService
     /// Pre-initializes the OCR engine (loads models into memory).
     /// </summary>
     Task InitializeAsync();
+
+    /// <summary>
+    /// Retrieves diagnostics of the initialized OCR engine.
+    /// </summary>
+    OcrDiagnostics? GetDiagnostics();
 }

@@ -22,20 +22,26 @@ public partial class CaptureResultViewModel : ObservableObject
     private string _recognizedText = string.Empty;
 
     [ObservableProperty]
+    private string _translatedText = string.Empty;
+
+    [ObservableProperty]
     private string _copyStatus = string.Empty;
 
-    public async Task SetCaptureDataAsync(byte[] imageBytes, double width, double height, DateTime timestamp, string recognizedText)
+    public async Task SetCaptureDataAsync(byte[] imageBytes, double width, double height, DateTime timestamp, string recognizedText, string translatedText)
     {
         Dimensions = $"{(int)width} x {(int)height} px";
         Timestamp = timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
         RecognizedText = recognizedText;
+        TranslatedText = translatedText;
 
-        if (!string.IsNullOrWhiteSpace(recognizedText))
+        string textToCopy = !string.IsNullOrWhiteSpace(translatedText) ? translatedText : recognizedText;
+
+        if (!string.IsNullOrWhiteSpace(textToCopy))
         {
             try
             {
                 var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
-                package.SetText(recognizedText);
+                package.SetText(textToCopy);
                 Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
                 CopyStatus = "Auto-copied to clipboard!";
             }

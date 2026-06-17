@@ -12,7 +12,11 @@ public static class DependencyInjection
         services.AddScoped<IGlossaryService, GlossaryService>();
         services.AddScoped<ISettingsService, SettingsService>();
         services.AddSingleton<IContextMemoryService, ContextMemoryService>();
+        services.AddSingleton<IBubbleMemoryService, BubbleMemoryService>();
+        services.AddScoped<ITranslationContextService, TranslationContextService>();
+        services.AddScoped<ITranslationProvider, StubTranslationProvider>();
         services.AddScoped<ITranslationService, TranslationService>();
+        services.AddScoped<IOcrBenchmarkService, OcrBenchmarkService>();
 
         return services;
     }

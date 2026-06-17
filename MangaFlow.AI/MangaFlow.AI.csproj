@@ -7,8 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LLamaSharp" Version="0.20.0" />
-    <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.20.0" />
+    <PackageReference Include="LLamaSharp" Version="0.27.0" />
+    <!--
+      Two native backends ship side by side in separate folders
+      (win-x64/native/avx2 vs win-x64/native/cuda12), so they don't collide.
+      LLamaSharp's NativeLibraryConfig auto-fallback picks CUDA when an NVIDIA GPU +
+      CUDA 12 runtime is present, otherwise falls back to the CPU build.
+      The CUDA Windows backend adds ~720 MB of native cuBLAS DLLs to the output.
+    -->
+    <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.27.0" />
+    <PackageReference Include="LLamaSharp.Backend.Cuda12.Windows" Version="0.27.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
   </ItemGroup>
 

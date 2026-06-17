@@ -14,4 +14,5 @@ public interface ITranslationMemoryRepository
     Task AddAsync(TranslationMemoryEntry entry);
     Task UpdateAsync(TranslationMemoryEntry entry);
     Task DeleteAsync(Guid id);
+    Task ClearAllAsync();
 }

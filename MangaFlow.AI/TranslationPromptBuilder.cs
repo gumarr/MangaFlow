@@ -6,16 +6,19 @@ namespace MangaFlow.AI;
 
 public static class TranslationPromptBuilder
 {
+    // /no_think (at the very top) disables Qwen3 extended thinking — critical for speed,
+    // it cuts the reasoning pass that was burning most of the inference time.
     public const string SystemPrompt =
-        "You are an expert English-to-Vietnamese translator specializing in manga and webtoons.\n" +
+        "/no_think\n" +
+        "You are a professional manga translator. Translate English manga dialogue into natural, " +
+        "fluent Vietnamese — the way a Vietnamese person actually speaks, not a literal word-for-word translation.\n" +
         "Rules:\n" +
-        "- Keep character names and proper nouns unchanged.\n" +
-        "- Keep honorifics when contextually appropriate.\n" +
-        "- Use glossary terms exactly as provided.\n" +
-        "- Use recent conversation context to maintain consistency.\n" +
-        "- Return the translation only — no explanations, notes, or commentary.\n" +
-        "- Preserve line breaks from the source text.\n" +
-        "- Maintain the dialogue tone (casual, formal, action, emotional).";
+        "- Output ONLY the Vietnamese translation. No English, no notes, no quotes around the whole line.\n" +
+        "- Write natural Vietnamese sentence case. Do NOT shout in ALL CAPS even if the source is uppercase.\n" +
+        "- Keep character names and proper nouns (people, places, titles) unchanged.\n" +
+        "- Use the right Vietnamese pronouns for the situation (tôi/tớ/cậu/anh/em/cô…). Pick what sounds natural.\n" +
+        "- Apply any glossary terms exactly as given.\n" +
+        "- Match the tone: casual, emotional, formal, or action as appropriate.";
 
     public static string BuildUserPrompt(string text, TranslationContext context)
     {
@@ -43,8 +46,8 @@ public static class TranslationPromptBuilder
             sb.AppendLine();
         }
 
-        sb.AppendLine("Translate the following English text to Vietnamese:");
-        sb.AppendLine(text);
+        sb.AppendLine("Translate this English manga line to natural Vietnamese:");
+        sb.Append(text);
 
         return sb.ToString().TrimEnd();
     }

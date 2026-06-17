@@ -190,7 +190,9 @@ public partial class App : Microsoft.UI.Xaml.Application
                             settings.LlmModelPath,
                             settings.CpuThreads,
                             settings.UseGpu,
-                            (float)settings.Temperature);
+                            (float)settings.Temperature,
+                            settings.GpuLayerCount,
+                            settings.ContextSize);
                     }
                 }
                 catch (Exception ex)

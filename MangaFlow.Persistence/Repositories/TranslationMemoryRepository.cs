@@ -45,7 +45,10 @@ public class TranslationMemoryRepository : ITranslationMemoryRepository
         var normalizedText = sourceText.Trim();
 
         return await _context.TranslationMemoryEntries
-            .FirstOrDefaultAsync(e => e.SourceText == normalizedText && e.ProjectId == projectId);
+            .FirstOrDefaultAsync(e => e.SourceText == normalizedText
+                                   && e.ProjectId == projectId
+                                   && e.TranslatedText != null
+                                   && e.TranslatedText != "");
     }
 
     public async Task AddAsync(TranslationMemoryEntry entry)
@@ -70,5 +73,11 @@ public class TranslationMemoryRepository : ITranslationMemoryRepository
             _context.TranslationMemoryEntries.Remove(entry);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task ClearAllAsync()
+    {
+        _context.TranslationMemoryEntries.RemoveRange(_context.TranslationMemoryEntries);
+        await _context.SaveChangesAsync();
     }
 }

@@ -107,8 +107,10 @@ public class CaptureWorkflow
                 ocrInferenceTimeMs = ocrStopwatch.ElapsedMilliseconds;
 
                 recognizedText = ocrResult?.FullText?.Trim() ?? string.Empty;
+                // Reflowed text: wrapped bubble lines joined into coherent sentences for the LLM.
+                string textForTranslation = ocrResult?.MergedText?.Trim() ?? recognizedText;
 
-                if (!string.IsNullOrEmpty(recognizedText))
+                if (!string.IsNullOrEmpty(textForTranslation))
                 {
                     // Find active project or use a default one
                     var projects = await projectService.GetAllProjectsAsync();
@@ -132,10 +134,10 @@ public class CaptureWorkflow
 
                     var translationStopwatch = System.Diagnostics.Stopwatch.StartNew();
                     var translationResult = await translationService.TranslateAsync(
-                        projectId, 
-                        recognizedText, 
-                        sourceLang, 
-                        targetLang, 
+                        projectId,
+                        textForTranslation,
+                        sourceLang,
+                        targetLang,
                         imageHash);
                     translationStopwatch.Stop();
                     translationInferenceTimeMs = translationStopwatch.ElapsedMilliseconds;

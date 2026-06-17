@@ -84,7 +84,30 @@
                         </StackPanel>
                     </Grid>
 
-                    <ToggleSwitch Header="Use GPU Acceleration (CUDA/Metal)" IsOn="{x:Bind ViewModel.UseGpu, Mode=TwoWay}" />
+                    <Grid ColumnDefinitions="*, *" ColumnSpacing="24">
+                        <StackPanel Grid.Column="0" Spacing="8">
+                            <TextBlock Text="Context Size (tokens)" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <NumberBox Value="{x:Bind ViewModel.ContextSize, Mode=TwoWay}" Minimum="512" Maximum="8192" SmallChange="512" SpinButtonPlacementMode="Compact" Width="160" />
+                            <TextBlock Text="2048 is plenty for manga bubbles. Larger = slower load + more RAM/VRAM." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="8">
+                            <TextBlock Text="GPU Layers" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <NumberBox Value="{x:Bind ViewModel.GpuLayerCount, Mode=TwoWay}" Minimum="0" Maximum="99" SmallChange="1" SpinButtonPlacementMode="Compact" Width="160" IsEnabled="{x:Bind ViewModel.UseGpu, Mode=OneWay}" />
+                            <TextBlock Text="99 = offload all layers to GPU. Lower if VRAM is limited. Ignored when GPU is off." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <ToggleSwitch Header="Use GPU Acceleration (NVIDIA CUDA)" IsOn="{x:Bind ViewModel.UseGpu, Mode=TwoWay}" />
+                    <TextBlock Text="Requires an NVIDIA GPU + CUDA 12 runtime. Falls back to CPU automatically if unavailable." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <Button Content="Apply &amp; Reload Model" Command="{x:Bind ViewModel.ReloadModelCommand}" />
+                            <ProgressRing IsActive="{x:Bind ViewModel.IsReloadingModel, Mode=OneWay}" Width="20" Height="20" />
+                        </StackPanel>
+                        <TextBlock Text="{x:Bind ViewModel.BackendStatusText, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" MaxWidth="600" HorizontalAlignment="Left" />
+                        <TextBlock Text="Reload after changing model path, threads, context, or GPU options." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
@@ -111,6 +134,15 @@
                     </Grid>
 
                     <ToggleSwitch Header="Show Capture Image Preview (Developer mode)" IsOn="{x:Bind ViewModel.ShowCapturePreview, Mode=TwoWay}" />
+
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Translation Memory" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <Button Content="Clear Translation Memory" Command="{x:Bind ViewModel.ClearTranslationMemoryCommand}" />
+                            <TextBlock Text="{x:Bind ViewModel.ClearTmStatusText, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="Clears all cached translations. Next capture will re-translate via LLM." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

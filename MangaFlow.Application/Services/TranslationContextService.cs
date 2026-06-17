@@ -27,25 +27,35 @@ public class TranslationContextService : ITranslationContextService
         // 1. Get recent bubbles (limit 3, as per requirement: "Given recent bubbles: Bubble 1, Bubble 2, Bubble 3")
         context.RecentBubbles = _bubbleMemoryService.GetRecentBubbles(3).ToList();
 
-        // 2. Fetch matched glossary terms
+        // 2. Fetch matched glossary terms.
+        // Wrapped in try/catch: a glossary lookup failure (e.g. schema mismatch) must never
+        // block the actual translation — degrade gracefully to "no glossary context" instead.
         if (!string.IsNullOrWhiteSpace(text))
         {
-            var projectTerms = await _glossaryRepository.GetByProjectIdAsync(projectId);
-            var globalTerms = await _glossaryRepository.GetGlobalTermsAsync();
-            var allTerms = projectTerms.Concat(globalTerms).ToList();
-
-            foreach (var term in allTerms)
+            try
             {
-                if (string.IsNullOrWhiteSpace(term.SourceText)) continue;
+                var projectTerms = await _glossaryRepository.GetByProjectIdAsync(projectId);
+                var globalTerms = await _glossaryRepository.GetGlobalTermsAsync();
+                var allTerms = projectTerms.Concat(globalTerms).ToList();
 
-                if (text.Contains(term.SourceText, StringComparison.OrdinalIgnoreCase))
+                foreach (var term in allTerms)
                 {
-                    context.GlossaryTerms.Add(term);
-                }
-            }
+                    if (string.IsNullOrWhiteSpace(term.SourceText)) continue;
 
-            // Sort terms by priority (highest first)
-            context.GlossaryTerms = context.GlossaryTerms.OrderByDescending(t => t.Priority).ToList();
+                    if (text.Contains(term.SourceText, StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.GlossaryTerms.Add(term);
+                    }
+                }
+
+                // Sort terms by priority (highest first)
+                context.GlossaryTerms = context.GlossaryTerms.OrderByDescending(t => t.Priority).ToList();
+            }
+            catch
+            {
+                // Glossary unavailable — proceed without glossary terms.
+                context.GlossaryTerms = new List<GlossaryTerm>();
+            }
         }
 
         return context;

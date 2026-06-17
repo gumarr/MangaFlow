@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MangaFlow.AI;
 using MangaFlow.Application.Interfaces;
+using MangaFlow.Application.Persistence;
 using MangaFlow.Domain.Entities;
 
 namespace MangaFlow.App.ViewModels;
@@ -13,6 +15,8 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ISettingsService _settingsService;
     private readonly IHotkeyService _hotkeyService;
     private readonly Services.CaptureWorkflow _captureWorkflow;
+    private readonly ITranslationMemoryRepository _tmRepository;
+    private readonly LlamaCppTranslationProvider _llmProvider;
     private readonly ILogger<SettingsViewModel> _logger;
 
     [ObservableProperty]
@@ -40,7 +44,19 @@ public partial class SettingsViewModel : ObservableObject
     private double _temperature = 0.3;
 
     [ObservableProperty]
-    private bool _useGpu = true;
+    private bool _useGpu = false;
+
+    [ObservableProperty]
+    private int _gpuLayerCount = 99;
+
+    [ObservableProperty]
+    private int _contextSize = 2048;
+
+    [ObservableProperty]
+    private string _backendStatusText = "Not loaded";
+
+    [ObservableProperty]
+    private bool _isReloadingModel;
 
     [ObservableProperty]
     private string _globalHotkey = "Alt + Q";
@@ -57,16 +73,87 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isSaving;
 
+    [ObservableProperty]
+    private string _clearTmStatusText = string.Empty;
+
     public SettingsViewModel(
         ISettingsService settingsService,
         IHotkeyService hotkeyService,
         Services.CaptureWorkflow captureWorkflow,
+        ITranslationMemoryRepository tmRepository,
+        LlamaCppTranslationProvider llmProvider,
         ILogger<SettingsViewModel> logger)
     {
         _settingsService = settingsService;
         _hotkeyService = hotkeyService;
         _captureWorkflow = captureWorkflow;
+        _tmRepository = tmRepository;
+        _llmProvider = llmProvider;
         _logger = logger;
+        BackendStatusText = _llmProvider.IsModelLoaded ? $"Running on: {_llmProvider.ActiveBackend}" : "Not loaded";
+    }
+
+    [RelayCommand]
+    public async Task ReloadModelAsync()
+    {
+        if (Settings == null) return;
+        if (string.IsNullOrWhiteSpace(LlmModelPath) || !System.IO.File.Exists(LlmModelPath))
+        {
+            BackendStatusText = "Model file not found — set a valid .gguf path first.";
+            return;
+        }
+
+        IsReloadingModel = true;
+        BackendStatusText = "Loading model...";
+        try
+        {
+            // Persist current values first so the load uses what the user sees.
+            await SaveSettingsAsync();
+
+            await _llmProvider.EnsureModelLoadedAsync(
+                LlmModelPath,
+                CpuThreads,
+                UseGpu,
+                (float)Temperature,
+                GpuLayerCount,
+                ContextSize);
+
+            BackendStatusText = $"Running on: {_llmProvider.ActiveBackend} | context {_llmProvider.ActiveContextSize}";
+
+            // If GPU was requested but the CUDA runtime is missing, tell the user why
+            // it fell back to CPU and how to fix it.
+            if (!string.IsNullOrEmpty(_llmProvider.GpuWarning))
+            {
+                BackendStatusText += $"\n⚠ {_llmProvider.GpuWarning}";
+            }
+
+            _logger.LogInformation("Model reloaded from Settings. Backend: {Backend}", _llmProvider.ActiveBackend);
+        }
+        catch (Exception ex)
+        {
+            BackendStatusText = $"Load failed: {ex.Message}";
+            _logger.LogError(ex, "Failed to reload model from Settings");
+        }
+        finally
+        {
+            IsReloadingModel = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task ClearTranslationMemoryAsync()
+    {
+        try
+        {
+            await _tmRepository.ClearAllAsync();
+            ClearTmStatusText = "Translation memory cleared.";
+            _logger.LogInformation("Translation memory cleared by user.");
+        }
+        catch (Exception ex)
+        {
+            ClearTmStatusText = $"Error: {ex.Message}";
+            _logger.LogError(ex, "Failed to clear translation memory");
+        }
     }
 
     [RelayCommand]
@@ -87,6 +174,8 @@ public partial class SettingsViewModel : ObservableObject
             CpuThreads = appSettings.CpuThreads;
             Temperature = appSettings.Temperature;
             UseGpu = appSettings.UseGpu;
+            GpuLayerCount = appSettings.GpuLayerCount;
+            ContextSize = appSettings.ContextSize;
             GlobalHotkey = appSettings.GlobalHotkey;
             DefaultSourceLanguage = appSettings.DefaultSourceLanguage;
             DefaultTargetLanguage = appSettings.DefaultTargetLanguage;
@@ -116,6 +205,8 @@ public partial class SettingsViewModel : ObservableObject
             Settings.CpuThreads = CpuThreads;
             Settings.Temperature = Temperature;
             Settings.UseGpu = UseGpu;
+            Settings.GpuLayerCount = GpuLayerCount;
+            Settings.ContextSize = ContextSize;
             Settings.GlobalHotkey = GlobalHotkey;
             Settings.DefaultSourceLanguage = DefaultSourceLanguage;
             Settings.DefaultTargetLanguage = DefaultTargetLanguage;

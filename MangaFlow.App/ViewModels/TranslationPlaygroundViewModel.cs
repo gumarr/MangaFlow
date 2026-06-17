@@ -78,13 +78,23 @@ public partial class TranslationPlaygroundViewModel : ObservableObject
         RefreshModelStatus();
         var settings = await _settingsService.GetSettingsAsync();
         ModelNameText = string.IsNullOrWhiteSpace(settings?.SelectedLlmModel) ? "Qwen3-8B Q4_K_M" : settings.SelectedLlmModel;
-        ContextLengthText = "4096 tokens";
+        ContextLengthText = $"{settings?.ContextSize ?? 2048} tokens";
     }
 
     private void RefreshModelStatus()
     {
         IsModelLoaded = _provider.IsModelLoaded;
-        ModelStatusText = _provider.IsModelLoaded ? "Loaded" : "Not loaded — set model path in Settings";
+        if (_provider.IsModelLoaded)
+        {
+            ModelStatusText = string.IsNullOrEmpty(_provider.GpuWarning)
+                ? $"Loaded — {_provider.ActiveBackend}"
+                : $"Loaded — {_provider.ActiveBackend} (GPU unavailable, see Settings)";
+            ContextLengthText = $"{_provider.ActiveContextSize} tokens";
+        }
+        else
+        {
+            ModelStatusText = "Not loaded — set model path in Settings";
+        }
     }
 
     [RelayCommand]
@@ -109,7 +119,9 @@ public partial class TranslationPlaygroundViewModel : ObservableObject
                 settings.LlmModelPath,
                 settings.CpuThreads,
                 settings.UseGpu,
-                (float)settings.Temperature);
+                (float)settings.Temperature,
+                settings.GpuLayerCount,
+                settings.ContextSize);
 
             RefreshModelStatus();
         }
@@ -150,6 +162,15 @@ public partial class TranslationPlaygroundViewModel : ObservableObject
                 projectId, SourceText, sourceLang, targetLang);
 
             sw.Stop();
+
+            // Surface provider failures to the user instead of showing a blank box
+            if (!result.IsSuccess && !string.IsNullOrEmpty(result.ErrorMessage))
+            {
+                TranslatedText = $"[Translation failed] {result.ErrorMessage}";
+                ExecutionTimeText = $"{sw.ElapsedMilliseconds} ms";
+                CacheStatusText = "ERROR";
+                return;
+            }
 
             TranslatedText = result.TranslatedText;
             ExecutionTimeText = $"{sw.ElapsedMilliseconds} ms";

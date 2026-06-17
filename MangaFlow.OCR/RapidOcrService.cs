@@ -277,16 +277,15 @@ public class RapidOcrService : IOcrService, IDisposable
                         _logger.LogError(ex, "Failed to save debug images");
                     }
 
-                    // Configure RapidOcrOptions:
-                    // - LimitSideLen = 1536: Allow larger images for better text detection accuracy
-                    // - BoxThresh = 0.3f: Lower threshold to detect more text regions (fewer missed lines)
-                    var ocrOptions = new RapidOcrOptions
+                    // Use Default preset: Padding=50 (helps text at edges), ImgResize=1024 (caps longer side).
+                    // Lower TextScore to 0.4 so manga bold/stylized fonts aren't dropped by the confidence filter.
+                    var ocrOptions = RapidOcrOptions.Default with
                     {
-                        LimitSideLen = 1536,
-                        BoxThresh = 0.3f
+                        TextScore = 0.4f,
+                        DoAngle = false,
                     };
-                    _logger.LogInformation("RapidOcr Options: LimitSideLen={LimitSideLen}, BoxThresh={BoxThresh}", 
-                        ocrOptions.LimitSideLen, ocrOptions.BoxThresh);
+                    _logger.LogInformation("RapidOcr Options: Padding={Padding}, ImgResize={ImgResize}, TextScore={TextScore}",
+                        ocrOptions.Padding, ocrOptions.ImgResize, ocrOptions.TextScore);
 
                     lock (_lock)
                     {

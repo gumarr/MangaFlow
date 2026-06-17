@@ -113,7 +113,7 @@ public class TranslationService : ITranslationService
             // Call the provider
             var result = await _translationProvider.TranslateAsync(text, sourceLanguage, targetLanguage, context);
 
-            if (result.IsSuccess)
+            if (result.IsSuccess && !string.IsNullOrWhiteSpace(result.TranslatedText))
             {
                 result.TranslatedText = result.TranslatedText.Trim();
 

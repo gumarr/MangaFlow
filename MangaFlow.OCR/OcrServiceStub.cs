@@ -18,6 +18,17 @@ public class OcrServiceStub : IOcrService
         return Task.FromResult(CreateMockResult(language));
     }
 
+    public Task<string?> ValidateAsync()
+    {
+        // Stub engine is always ready — no model files needed
+        return Task.FromResult<string?>(null);
+    }
+
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
     private OcrResult CreateMockResult(string language)
     {
         var result = new OcrResult();

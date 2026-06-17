@@ -12,23 +12,26 @@ namespace MangaFlow.App.Services;
 public class CaptureWorkflow
 {
     private readonly IScreenCaptureService _screenCaptureService;
+    private readonly IOcrService _ocrService;
     private readonly ILogger<CaptureWorkflow> _logger;
     private readonly IServiceProvider _serviceProvider;
     private CaptureResultWindow? _activeResultWindow;
-    private static int _testCounter = 0;
 
     public CaptureWorkflow(
         IScreenCaptureService screenCaptureService,
+        IOcrService ocrService,
         ILogger<CaptureWorkflow> logger,
         IServiceProvider serviceProvider)
     {
         _screenCaptureService = screenCaptureService;
+        _ocrService = ocrService;
         _logger = logger;
         _serviceProvider = serviceProvider;
     }
 
     public async Task StartCaptureWorkflowAsync()
     {
+        var totalStopwatch = System.Diagnostics.Stopwatch.StartNew();
         _logger.LogInformation("Hotkey fired.");
         App.LogToFile("Hotkey fired.");
         try
@@ -85,38 +88,22 @@ public class CaptureWorkflow
 
             // 5. Run OCR using the DI registered services
             string recognizedText = string.Empty;
-            bool showPreview = false;
+            long ocrInferenceTimeMs = 0;
             using (var scope = _serviceProvider.CreateScope())
             {
                 var settingsService = scope.ServiceProvider.GetRequiredService<ISettingsService>();
                 var settings = await settingsService.GetSettingsAsync();
-                showPreview = settings?.ShowCapturePreview ?? false;
+                string language = settings?.OcrLanguage ?? "Japanese";
 
-                // Mock OCR/Translation text selector (cycles through 50, 300, and 1000 characters)
-                int currentCase = _testCounter++ % 3;
-                if (currentCase == 0)
+                var ocrStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var ocrResult = await _ocrService.RecognizeTextAsync(imageBytes, language);
+                ocrStopwatch.Stop();
+                ocrInferenceTimeMs = ocrStopwatch.ElapsedMilliseconds;
+
+                recognizedText = ocrResult?.FullText?.Trim() ?? string.Empty;
+                if (string.IsNullOrEmpty(recognizedText))
                 {
-                    recognizedText = "Mock OCR Text: Short bubble translation (50 chars).";
-                }
-                else if (currentCase == 1)
-                {
-                    recognizedText = "MangaFlow Translation Tooltip UX v1 Mock OCR Text.\n\n" +
-                                     "This is a demonstration of the auto-sizing, floating, and topmost WinUI 3 tooltip. " +
-                                     "It displays recognized text from the selected screen region. " +
-                                     "You can copy this text using Ctrl+C or text selection. Thank you for using MangaFlow!";
-                }
-                else
-                {
-                    recognizedText = "MangaFlow Tooltip Scaling and DPI-Awareness Test.\n\n" +
-                                     "This is a long mock translation designed to test the tooltip vertical scrollbar and text wrapping behavior. " +
-                                     "When the text is very long, we prioritize expanding the width of the tooltip to match wider paragraphs, " +
-                                     "which helps reduce the vertical height and prevents excessive wrapping. This mimics real-world manga " +
-                                     "translation layouts where text should be comfortably readable without the user needing to constantly scroll.\n\n" +
-                                     "Here is some additional text to fill up space and reach the 1000 character target. Reading text in bubbles on " +
-                                     "high-resolution displays (such as 1440p, 3K, or 4K monitors) requires adequate DPI scaling, clean typography, " +
-                                     "comfortable line spacing, and spacious internal padding. By dynamically scaling the width and height, this " +
-                                     "translation tooltip offers a premium reading experience that integrates seamlessly into the background. " +
-                                     "Let's make sure that everything stays within the viewport boundaries and is fully selectable. Enjoy reading!";
+                    recognizedText = "No text detected.";
                 }
             }
 
@@ -126,6 +113,11 @@ public class CaptureWorkflow
 
             _activeResultWindow = new CaptureResultWindow(resultViewModel, x, y, w, h);
             _activeResultWindow.Activate();
+
+            totalStopwatch.Stop();
+            _logger.LogInformation("OCR inference time: {OcrTime} ms", ocrInferenceTimeMs);
+            _logger.LogInformation("Total workflow time: {TotalTime} ms", totalStopwatch.ElapsedMilliseconds);
+            App.LogToFile($"OCR inference time: {ocrInferenceTimeMs} ms | Total workflow time: {totalStopwatch.ElapsedMilliseconds} ms");
             _logger.LogInformation("Capture result window opened.");
             App.LogToFile("Capture result window opened.");
         }

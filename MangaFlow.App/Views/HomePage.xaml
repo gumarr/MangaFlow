@@ -12,10 +12,20 @@
 
     <Page.Resources>
         <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
     </Page.Resources>
 
     <ScrollViewer Padding="32,24,32,24">
         <StackPanel Spacing="24" MaxWidth="1000" HorizontalAlignment="Left">
+            <!-- OCR Status InfoBar -->
+            <InfoBar x:Name="OcrStatusBar"
+                     IsOpen="True"
+                     IsClosable="True"
+                     Severity="Warning"
+                     Title="OCR Engine"
+                     Message="{x:Bind ViewModel.OcrValidationMessage, Mode=OneWay}"
+                     Visibility="{x:Bind ViewModel.OcrValidationMessage, Converter={StaticResource NullToVisibilityConverter}, Mode=OneWay}" />
+
             <!-- Header section -->
             <StackPanel Spacing="4">
                 <TextBlock Text="MangaFlow" Style="{ThemeResource HeaderTextBlockStyle}" FontWeight="Bold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />

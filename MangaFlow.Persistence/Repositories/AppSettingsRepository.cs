@@ -17,6 +17,12 @@ public class AppSettingsRepository : IAppSettingsRepository
 
     public async Task<AppSettings> GetSettingsAsync()
     {
+        string defaultModelPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "models", "v5");
+        if (!System.IO.Directory.Exists(defaultModelPath))
+        {
+            defaultModelPath = string.Empty;
+        }
+
         var settings = await _context.Settings.FirstOrDefaultAsync();
         if (settings == null)
         {
@@ -25,7 +31,7 @@ public class AppSettingsRepository : IAppSettingsRepository
                 Id = Guid.NewGuid(),
                 OcrLanguage = "Japanese",
                 OcrEngine = "RapidOCR",
-                OcrModelPath = string.Empty,
+                OcrModelPath = defaultModelPath,
                 SelectedLlmModel = "Qwen 3 8B GGUF",
                 LlmModelPath = string.Empty,
                 CpuThreads = 4,
@@ -38,6 +44,12 @@ public class AppSettingsRepository : IAppSettingsRepository
                 UpdatedAt = DateTime.UtcNow
             };
             await _context.Settings.AddAsync(settings);
+            await _context.SaveChangesAsync();
+        }
+        else if (string.IsNullOrWhiteSpace(settings.OcrModelPath) && !string.IsNullOrEmpty(defaultModelPath))
+        {
+            settings.OcrModelPath = defaultModelPath;
+            settings.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
         return settings;

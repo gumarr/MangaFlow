@@ -168,6 +168,13 @@ public partial class App : Microsoft.UI.Xaml.Application
 
         try
         {
+            // Pre-initialize OCR Service at application startup in background thread
+            var ocrService = ServiceProvider.GetRequiredService<IOcrService>();
+            _ = Task.Run(async () =>
+            {
+                await ocrService.InitializeAsync();
+            });
+
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_window);
             
             // Initialize System Tray Service

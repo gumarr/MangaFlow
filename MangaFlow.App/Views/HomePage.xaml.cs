@@ -19,7 +19,7 @@ public sealed partial class HomePage : Page
         this.DataContext = ViewModel;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         
@@ -27,6 +27,12 @@ public sealed partial class HomePage : Page
         if (ViewModel.LoadProjectsCommand.CanExecute(null))
         {
             ViewModel.LoadProjectsCommand.Execute(null);
+        }
+
+        // Run OCR startup validation
+        if (ViewModel.CheckOcrStatusCommand.CanExecute(null))
+        {
+            await ViewModel.CheckOcrStatusCommand.ExecuteAsync(null);
         }
     }
 }

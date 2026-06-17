@@ -94,7 +94,7 @@ public class RapidOcrService : IOcrService, IDisposable
 
                     var ocrLine = new OcrLine
                     {
-                        Text = block.GetText() ?? string.Empty,
+                        Text = block.Text ?? string.Empty,
                         Confidence = confidence
                     };
 
@@ -140,6 +140,64 @@ public class RapidOcrService : IOcrService, IDisposable
 
         byte[] bytes = await File.ReadAllBytesAsync(imagePath);
         return await RecognizeTextAsync(bytes, language);
+    }
+
+    public async Task<string?> ValidateAsync()
+    {
+        var settings = await _settingsService.GetSettingsAsync();
+        if (settings == null || settings.OcrEngine != "RapidOCR")
+        {
+            // Stub mode — always valid
+            return null;
+        }
+
+        string modelPath = settings.OcrModelPath;
+        if (string.IsNullOrWhiteSpace(modelPath))
+        {
+            return "OCR model path is not configured. Go to Settings → OCR Model Path.";
+        }
+
+        if (!Directory.Exists(modelPath))
+        {
+            return $"OCR model directory not found: '{modelPath}'";
+        }
+
+        string detPath = FindFile(modelPath, "*det*.onnx");
+        string recPath = FindFile(modelPath, "*rec*.onnx");
+        string keysPath = FindFile(modelPath, "*.txt");
+
+        if (string.IsNullOrEmpty(detPath) || string.IsNullOrEmpty(recPath) || string.IsNullOrEmpty(keysPath))
+        {
+            _logger.LogWarning("OCR model not installed. Missing ONNX files in: {ModelPath}", modelPath);
+            return "OCR model not installed.";
+        }
+
+        _logger.LogInformation("OCR model validation passed. det={Det} rec={Rec} keys={Keys}", detPath, recPath, keysPath);
+        return null;
+    }
+
+    public async Task InitializeAsync()
+    {
+        try
+        {
+            var validationError = await ValidateAsync();
+            if (validationError != null)
+            {
+                _logger.LogWarning("Skipping OCR pre-initialization: {Error}", validationError);
+                return;
+            }
+
+            var settings = await _settingsService.GetSettingsAsync();
+            if (settings != null && settings.OcrEngine == "RapidOCR")
+            {
+                _logger.LogInformation("Pre-initializing RapidOCR engine at startup...");
+                EnsureEngineInitialized(settings.OcrModelPath, settings.CpuThreads);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to pre-initialize RapidOCR engine.");
+        }
     }
 
     private void EnsureEngineInitialized(string modelPath, int cpuThreads)

@@ -27,6 +27,9 @@ public partial class HomeViewModel : ObservableObject
     private bool _isTranslating;
 
     [ObservableProperty]
+    private string? _ocrValidationMessage;
+
+    [ObservableProperty]
     private Project? _selectedProject;
 
     public ObservableCollection<Project> Projects { get; } = new();
@@ -66,6 +69,27 @@ public partial class HomeViewModel : ObservableObject
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading projects in HomeView");
+        }
+    }
+
+    [RelayCommand]
+    public async Task CheckOcrStatusAsync()
+    {
+        try
+        {
+            OcrValidationMessage = await _ocrService.ValidateAsync();
+            if (OcrValidationMessage != null)
+            {
+                _logger.LogWarning("OCR startup validation failed: {Message}", OcrValidationMessage);
+            }
+            else
+            {
+                _logger.LogInformation("OCR startup validation passed.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error running OCR startup validation");
         }
     }
 
